@@ -1,0 +1,601 @@
+import React, { useEffect, useMemo, useState } from "react";
+import {
+  CheckCircle,
+  Pencil,
+  Plus,
+  RefreshCw,
+  Search,
+  Trash2,
+  UserCheck,
+  X,
+} from "lucide-react";
+import "./Receptionists.css";
+import { apiUrl } from "../../config/api";
+
+const RECEPTIONIST_API = apiUrl("Receptionist");
+
+const getAuthToken = () =>
+  localStorage.getItem("adminToken") || localStorage.getItem("token");
+
+const decodeJwtPayload = (token) => {
+  try {
+    const payload = token?.split(".")?.[1];
+    if (!payload || typeof atob !== "function") return null;
+
+    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const padding = "=".repeat((4 - (normalized.length % 4)) % 4);
+    return JSON.parse(atob(normalized + padding));
+  } catch {
+    return null;
+  }
+};
+
+const getHospitalId = () => {
+  const storedHospitalId = localStorage.getItem("hospitalId");
+  if (storedHospitalId) return Number(storedHospitalId);
+
+  const claims = decodeJwtPayload(getAuthToken());
+  return Number(claims?.HospitalId || claims?.hospitalId || 0);
+};
+
+const getEmptyForm = () => ({
+  name: "",
+  email: "",
+  phone: "",
+  password: "",
+});
+
+const parseReceptionistsResponse = (data) => {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.data)) return data.data;
+  return [];
+};
+
+const formatDate = (value) => {
+  if (!value) return "-";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(date);
+};
+
+const getValidationMessages = (data) => {
+  if (!data?.errors || typeof data.errors !== "object") return [];
+
+  return Object.entries(data.errors)
+    .flatMap(([key, messages]) => {
+      const list = Array.isArray(messages) ? messages : [messages];
+      return list.filter(Boolean).map((message) => `${key}: ${message}`);
+    })
+    .filter(Boolean);
+};
+
+const parseErrorMessage = async (response, fallback) => {
+  try {
+    const text = await response.text();
+    if (!text) return fallback;
+
+    try {
+      const data = JSON.parse(text);
+      return (
+        data?.message ||
+        getValidationMessages(data).join(" ") ||
+        data?.title ||
+        text
+      );
+    } catch {
+      return text;
+    }
+  } catch {
+    return fallback;
+  }
+};
+
+function Receptionists() {
+  const [receptionists, setReceptionists] = useState([]);
+  const [searchText, setSearchText] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingReceptionist, setEditingReceptionist] = useState(null);
+  const [form, setForm] = useState(getEmptyForm());
+  const [fieldErrors, setFieldErrors] = useState({});
+
+  const hospitalId = getHospitalId();
+
+  const fetchReceptionists = async () => {
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch(RECEPTIONIST_API, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          await parseErrorMessage(response, "Unable to load receptionists.")
+        );
+      }
+
+      const data = await response.json();
+      setReceptionists(parseReceptionistsResponse(data));
+    } catch (fetchError) {
+      setError(fetchError.message || "Unable to load receptionists.");
+      setReceptionists([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReceptionists();
+  }, []);
+
+  const filteredReceptionists = useMemo(() => {
+    const value = searchText.trim().toLowerCase();
+    if (!value) return receptionists;
+
+    return receptionists.filter((item) =>
+      [item.name, item.email, item.phone]
+        .filter(Boolean)
+        .some((field) => String(field).toLowerCase().includes(value))
+    );
+  }, [receptionists, searchText]);
+
+  const openAddModal = () => {
+    setEditingReceptionist(null);
+    setForm(getEmptyForm());
+    setFieldErrors({});
+    setError("");
+    setSuccess("");
+    setModalOpen(true);
+  };
+
+  const openEditModal = (receptionist) => {
+    setEditingReceptionist(receptionist);
+    setForm({
+      name: receptionist?.name || "",
+      email: receptionist?.email || "",
+      phone: receptionist?.phone || "",
+      password: "",
+    });
+    setFieldErrors({});
+    setError("");
+    setSuccess("");
+    setModalOpen(true);
+  };
+
+  const closeModal = ({ force = false } = {}) => {
+    if (saving && !force) return;
+
+    setModalOpen(false);
+    setEditingReceptionist(null);
+    setForm(getEmptyForm());
+    setFieldErrors({});
+  };
+
+  const updateField = (name, value) => {
+    setForm((previous) => ({
+      ...previous,
+      [name]: value,
+    }));
+
+    setFieldErrors((previous) => ({
+      ...previous,
+      [name]: "",
+    }));
+    setError("");
+    setSuccess("");
+  };
+
+  const validateForm = () => {
+    const nextErrors = {};
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phonePattern = /^[0-9+\-\s()]{7,15}$/;
+
+    if (!form.name.trim()) {
+      nextErrors.name = "Name is required.";
+    }
+
+    if (!form.email.trim()) {
+      nextErrors.email = "Email is required.";
+    } else if (!emailPattern.test(form.email.trim())) {
+      nextErrors.email = "Enter a valid email address.";
+    }
+
+    if (!form.phone.trim()) {
+      nextErrors.phone = "Phone is required.";
+    } else if (!phonePattern.test(form.phone.trim())) {
+      nextErrors.phone = "Enter a valid phone number.";
+    }
+
+    if (!editingReceptionist && !form.password.trim()) {
+      nextErrors.password = "Password is required.";
+    }
+
+    if (!hospitalId) {
+      nextErrors.form = "Hospital ID not found. Please login again.";
+    }
+
+    setFieldErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    if (!validateForm()) {
+      setError("Please fix the highlighted fields.");
+      return;
+    }
+
+    setSaving(true);
+    setError("");
+    setSuccess("");
+
+    const payload = {
+      name: form.name.trim(),
+      email: form.email.trim(),
+      phone: form.phone.trim(),
+      password: form.password,
+      hospitalId,
+    };
+
+    try {
+      const isEditing = Boolean(editingReceptionist?.id);
+      const response = await fetch(
+        isEditing
+          ? `${RECEPTIONIST_API}/${editingReceptionist.id}`
+          : RECEPTIONIST_API,
+        {
+          method: isEditing ? "PUT" : "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "ngrok-skip-browser-warning": "true",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          await parseErrorMessage(
+            response,
+            isEditing
+              ? "Unable to update receptionist."
+              : "Unable to create receptionist."
+          )
+        );
+      }
+
+      const data = await response.json().catch(() => ({}));
+      setSuccess(
+        data?.message ||
+          (isEditing
+            ? "Receptionist updated successfully"
+            : "Receptionist created successfully")
+      );
+      await fetchReceptionists();
+      closeModal({ force: true });
+    } catch (submitError) {
+      setError(submitError.message || "Unable to save receptionist.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (receptionist) => {
+    if (!receptionist?.id || deletingId) return;
+
+    const shouldDelete = window.confirm(
+      `Delete receptionist ${receptionist.name || ""}?`
+    );
+    if (!shouldDelete) return;
+
+    setDeletingId(receptionist.id);
+    setError("");
+    setSuccess("");
+
+    try {
+      const response = await fetch(`${RECEPTIONIST_API}/${receptionist.id}`, {
+        method: "DELETE",
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          await parseErrorMessage(response, "Unable to delete receptionist.")
+        );
+      }
+
+      setReceptionists((previous) =>
+        previous.filter((item) => item.id !== receptionist.id)
+      );
+      setSuccess("Receptionist deleted successfully");
+    } catch (deleteError) {
+      setError(deleteError.message || "Unable to delete receptionist.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  return (
+    <div className="receptionists-page">
+      <div className="receptionists-header">
+        <div>
+          <h2>Receptionists</h2>
+          <p>
+            {loading
+              ? "Loading receptionists..."
+              : `${filteredReceptionists.length} receptionist records`}
+          </p>
+        </div>
+
+        <div className="receptionists-header-actions">
+          <button
+            type="button"
+            className="receptionists-icon-button"
+            onClick={fetchReceptionists}
+            disabled={loading || saving}
+            title="Refresh receptionist list"
+          >
+            <RefreshCw size={16} />
+          </button>
+
+          <button
+            type="button"
+            className="receptionists-primary-button"
+            onClick={openAddModal}
+          >
+            <Plus size={16} />
+            Add Receptionist
+          </button>
+        </div>
+      </div>
+
+      <div className="receptionists-toolbar">
+        <div className="receptionists-search">
+          <Search size={16} />
+          <input
+            value={searchText}
+            onChange={(event) => setSearchText(event.target.value)}
+            placeholder="Search name, email, phone..."
+          />
+        </div>
+      </div>
+
+      {success ? <div className="receptionists-success">{success}</div> : null}
+      {error ? <div className="receptionists-error">{error}</div> : null}
+
+      <div className="receptionists-table">
+        <div className="receptionists-thead">
+          <span>Name</span>
+          <span>Email</span>
+          <span>Phone</span>
+          <span>Status</span>
+          <span>Created</span>
+          <span>Actions</span>
+        </div>
+
+        {!loading && filteredReceptionists.length === 0 ? (
+          <div className="receptionists-empty">No receptionists found.</div>
+        ) : null}
+
+        {filteredReceptionists.map((receptionist) => {
+          const initials =
+            (receptionist.name || "R")
+              .split(" ")
+              .filter(Boolean)
+              .map((part) => part[0])
+              .join("")
+              .slice(0, 2)
+              .toUpperCase() || "R";
+          const isDeleting = deletingId === receptionist.id;
+
+          return (
+            <div className="receptionists-row" key={receptionist.id}>
+              <div className="receptionists-name-cell">
+                <div className="receptionists-avatar">{initials}</div>
+                <div>
+                  <b>{receptionist.name || "-"}</b>
+                  <span>Hospital {receptionist.hospitalId || hospitalId || "-"}</span>
+                </div>
+              </div>
+
+              <span className="receptionists-cell">{receptionist.email || "-"}</span>
+              <span className="receptionists-cell">{receptionist.phone || "-"}</span>
+
+              <span className="receptionists-cell">
+                <span
+                  className={`receptionists-status ${
+                    receptionist.isActive
+                      ? "receptionists-status-active"
+                      : "receptionists-status-inactive"
+                  }`}
+                >
+                  {receptionist.isActive ? "Active" : "Inactive"}
+                </span>
+              </span>
+
+              <span className="receptionists-cell">
+                {formatDate(receptionist.createdAt)}
+              </span>
+
+              <div className="receptionists-actions">
+                <button
+                  type="button"
+                  className="receptionists-action-button"
+                  onClick={() => openEditModal(receptionist)}
+                  disabled={isDeleting}
+                  title="Edit receptionist"
+                >
+                  <Pencil size={14} />
+                </button>
+
+                <button
+                  type="button"
+                  className="receptionists-action-button receptionists-action-danger"
+                  onClick={() => handleDelete(receptionist)}
+                  disabled={isDeleting}
+                  title="Delete receptionist"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {modalOpen ? (
+        <div className="receptionists-modal-overlay" onClick={closeModal}>
+          <div
+            className="receptionists-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="receptionists-modal-header">
+              <div className="receptionists-modal-title">
+                <div className="receptionists-modal-icon">
+                  <UserCheck size={20} />
+                </div>
+                <div>
+                  <h3>
+                    {editingReceptionist ? "Edit Receptionist" : "Add Receptionist"}
+                  </h3>
+                  <p>Hospital ID {hospitalId || "-"}</p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="receptionists-modal-close"
+                onClick={closeModal}
+                disabled={saving}
+                aria-label="Close receptionist form"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <form className="receptionists-form" onSubmit={handleSubmit} noValidate>
+              <div className="receptionists-field">
+                <label htmlFor="receptionist-name">Name</label>
+                <input
+                  id="receptionist-name"
+                  value={form.name}
+                  onChange={(event) => updateField("name", event.target.value)}
+                  className={fieldErrors.name ? "is-invalid" : ""}
+                  disabled={saving}
+                  autoFocus
+                />
+                {fieldErrors.name ? (
+                  <span className="receptionists-field-error">
+                    {fieldErrors.name}
+                  </span>
+                ) : null}
+              </div>
+
+              <div className="receptionists-field">
+                <label htmlFor="receptionist-email">Email</label>
+                <input
+                  id="receptionist-email"
+                  type="email"
+                  value={form.email}
+                  onChange={(event) => updateField("email", event.target.value)}
+                  className={fieldErrors.email ? "is-invalid" : ""}
+                  disabled={saving}
+                />
+                {fieldErrors.email ? (
+                  <span className="receptionists-field-error">
+                    {fieldErrors.email}
+                  </span>
+                ) : null}
+              </div>
+
+              <div className="receptionists-field">
+                <label htmlFor="receptionist-phone">Phone</label>
+                <input
+                  id="receptionist-phone"
+                  value={form.phone}
+                  onChange={(event) => updateField("phone", event.target.value)}
+                  className={fieldErrors.phone ? "is-invalid" : ""}
+                  disabled={saving}
+                />
+                {fieldErrors.phone ? (
+                  <span className="receptionists-field-error">
+                    {fieldErrors.phone}
+                  </span>
+                ) : null}
+              </div>
+
+              <div className="receptionists-field">
+                <label htmlFor="receptionist-password">Password</label>
+                <input
+                  id="receptionist-password"
+                  type="password"
+                  value={form.password}
+                  onChange={(event) => updateField("password", event.target.value)}
+                  className={fieldErrors.password ? "is-invalid" : ""}
+                  placeholder={
+                    editingReceptionist ? "Leave blank if unchanged" : ""
+                  }
+                  disabled={saving}
+                  autoComplete="new-password"
+                />
+                {fieldErrors.password ? (
+                  <span className="receptionists-field-error">
+                    {fieldErrors.password}
+                  </span>
+                ) : null}
+              </div>
+
+              {fieldErrors.form ? (
+                <div className="receptionists-error receptionists-form-message">
+                  {fieldErrors.form}
+                </div>
+              ) : null}
+
+              <div className="receptionists-modal-actions">
+                <button
+                  type="button"
+                  className="receptionists-secondary-button"
+                  onClick={closeModal}
+                  disabled={saving}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="receptionists-save-button"
+                  disabled={saving}
+                >
+                  <CheckCircle size={16} />
+                  {saving
+                    ? "Saving..."
+                    : editingReceptionist
+                      ? "Update Receptionist"
+                      : "Create Receptionist"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+export default Receptionists;

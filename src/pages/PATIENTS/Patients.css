@@ -1,0 +1,163 @@
+.patients-page {
+  padding: 20px;
+}
+
+.patients-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.patients-title {
+  margin: 0;
+  font-size: 32px;
+  line-height: 1.1;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.patients-subtitle {
+  margin: 8px 0 0;
+  color: #526f90;
+  font-size: 15px;
+}
+
+.patients-add-btn {
+  border: none;
+  border-radius: 12px;
+  background: #1897a8;
+  color: #ffffff;
+  padding: 13px 22px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.patients-table {
+  background: #ffffff;
+  border: 1px solid #d8e2ee;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.patients-search-wrap {
+  padding: 24px 22px;
+  border-bottom: 1px solid #d8e2ee;
+}
+
+.patients-search-bar {
+  width: min(480px, 100%);
+  height: 52px;
+  border: 1px solid #d8e2ee;
+  background: #f1f5f9;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #5f7694;
+  padding: 0 16px;
+}
+
+.patients-search-bar input {
+  border: none;
+  background: transparent;
+  width: 100%;
+  outline: none;
+  font-size: 15px;
+  color: #334155;
+}
+
+.patients-thead,
+.patients-row {
+  display: grid;
+  grid-template-columns: 2.2fr 1.6fr 0.7fr 1fr 1.3fr 0.9fr;
+  align-items: center;
+  padding: 18px 22px;
+}
+
+.patients-thead {
+  color: #5a7391;
+  font-size: 15px;
+  font-weight: 500;
+  border-bottom: 1px solid #d8e2ee;
+}
+
+.patients-row {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.patients-row:last-of-type {
+  border-bottom: none;
+}
+
+.patients-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.patients-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #d9edf9;
+  color: #058fd7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.patients-info b {
+  display: block;
+  font-size: 16px;
+  color: #0f172a;
+}
+
+.patients-info p {
+  margin: 2px 0 0;
+  color: #5f7694;
+}
+
+.patients-row span {
+  font-size: 16px;
+  color: #0f172a;
+}
+
+.patients-row span:nth-child(2),
+.patients-row span:nth-child(5) {
+  color: #5f7694;
+}
+
+.patients-view-btn {
+  border: none;
+  background: transparent;
+  color: #0f172a;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  justify-self: start;
+  padding: 0;
+}
+
+.patients-empty {
+  padding: 30px 22px;
+  color: #64748b;
+}
+
+@media (max-width: 1100px) {
+  .patients-thead,
+  .patients-row {
+    grid-template-columns: 2.4fr 1.5fr 0.7fr 1fr 1.2fr 1fr;
+  }
+}
