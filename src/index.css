@@ -1,10 +1,62 @@
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: "Inter", "Segoe UI", Arial, sans-serif;
+  font-size: 14px;
+  color: #071120;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+:root {
+  --app-bg: #f8fafc;
+  --app-surface: #ffffff;
+  --app-border: #e5e7eb;
+  --app-text: #071120;
+  --app-muted: #40516a;
+  --app-accent: #0f9d9d;
+  --app-accent-soft: #dff3f3;
+  --app-heading-size: 24px;
+  --app-title-size: 16px;
+  --app-body-size: 14px;
+  --app-caption-size: 12px;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+.content h1,
+.content h2,
+.dr-layout-content h1,
+.dr-layout-content h2,
+.rc-content h1,
+.rc-content h2 {
+  font-size: var(--app-heading-size);
+  line-height: 1.18;
+  letter-spacing: 0;
+}
+
+.content h3,
+.dr-layout-content h3,
+.rc-content h3 {
+  font-size: var(--app-title-size);
+  line-height: 1.25;
+  letter-spacing: 0;
+}
+
+.content p,
+.content span,
+.content label,
+.dr-layout-content p,
+.dr-layout-content span,
+.dr-layout-content label,
+.rc-content p,
+.rc-content span,
+.rc-content label {
+  letter-spacing: 0;
 }
 
 code {

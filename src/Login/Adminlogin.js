@@ -59,11 +59,15 @@ const clearStoredSession = () => {
     'token',
     'adminToken',
     'doctorToken',
+    'receptionistToken',
     'adminRole',
     'doctorRole',
+    'receptionistRole',
     'userRole',
     'adminEmail',
     'doctorEmail',
+    'receptionistEmail',
+    'receptionistName',
     'doctorId',
     'doctorName',
     'hospitalId',
@@ -166,9 +170,9 @@ const AdminLogin = () => {
         );
       const normalizedRole = String(role || '').toLowerCase();
 
-      if (!['admin', 'doctor'].includes(normalizedRole)) {
+      if (!['admin', 'doctor', 'receptionist'].includes(normalizedRole)) {
         setErrors({
-          api: 'Access denied. This account does not have Admin or Doctor role.',
+          api: 'Access denied. This account does not have Admin, Doctor, or Receptionist role.',
         });
         return;
       }
@@ -199,6 +203,15 @@ const AdminLogin = () => {
         localStorage.setItem('doctorName', displayName);
         localStorage.setItem('doctorId', String(data.doctorId || getClaim(claims, 'DoctorId') || ''));
         navigate('/doctor/dashboard', { replace: true });
+        return;
+      }
+
+      if (normalizedRole === 'receptionist') {
+        localStorage.setItem('receptionistToken', data.token);
+        localStorage.setItem('receptionistRole', role);
+        localStorage.setItem('receptionistEmail', data.email || email.trim());
+        localStorage.setItem('receptionistName', displayName);
+        navigate('/reception/dashboard', { replace: true });
         return;
       }
 

@@ -4,9 +4,9 @@
    ============================================================ */
 
 .dr-topbar {
-  height: 60px;
+  height: 86px;
   background: #ffffff;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e5e7eb;
   display: flex;
   align-items: center;
   gap: 16px;
@@ -39,9 +39,9 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  background: #f1f5f9;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
   padding: 0 14px;
   height: 38px;
 }
@@ -88,7 +88,7 @@
 .dr-topbar-icon-btn {
   width: 36px;
   height: 36px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #e5e7eb;
   border-radius: 9px;
   background: #ffffff;
   color: #475569;
@@ -101,8 +101,8 @@
 }
 
 .dr-topbar-icon-btn:hover {
-  background: #f1f5f9;
-  color: #1e293b;
+  background: #eef6f6;
+  color: #0f9d9d;
 }
 
 /* Notification badge */
@@ -127,93 +127,3 @@
 }
 
 /* Profile */
-.dr-profile-wrap {
-  position: relative;
-}
-
-.dr-topbar-profile {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 5px 10px;
-  border: 1px solid #e2e8f0;
-  border-radius: 9px;
-  cursor: pointer;
-  transition: background 0.15s;
-  font-family: inherit;
-}
-
-.dr-topbar-profile:hover {
-  background: #f8fafc;
-}
-
-.dr-profile-avatar {
-  width: 30px;
-  height: 30px;
-  background: #2563eb;
-  color: #fff;
-  border-radius: 50%;
-  font-size: 12px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.dr-profile-name {
-  font-size: 13px;
-  font-weight: 600;
-  color: #0f172a;
-}
-
-.dr-profile-chevron {
-  color: #94a3b8;
-}
-
-.dr-profile-menu {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  width: 220px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.12);
-  overflow: hidden;
-  z-index: 120;
-}
-
-.dr-profile-menu-head {
-  padding: 12px 14px;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.dr-profile-menu-head p {
-  margin: 0 0 4px;
-  color: #0f172a;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.dr-profile-menu-head span {
-  color: #64748b;
-  font-size: 12px;
-  word-break: break-word;
-}
-
-.dr-profile-menu button {
-  width: 100%;
-  border: 0;
-  background: #ffffff;
-  color: #dc2626;
-  cursor: pointer;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  padding: 12px 14px;
-  text-align: left;
-}
-
-.dr-profile-menu button:hover {
-  background: #fff1f2;
-}
