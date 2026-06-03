@@ -2,6 +2,8 @@ import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import AppLayout from "./layout/AppLayout";
 import DoctorApp from "./doctors/DoctorApp";
+import ReceptionistApp from "./Recepitionist/ReceptionistApp";
+import UserProfilePage from "./profile/UserProfilePage";
 
 // Pages
 import AdminLogin from "./Login/Adminlogin";
@@ -50,6 +52,7 @@ function App() {
 
           {/* Dashboard */}
           <Route path="dashboard" element={<Dashboard />} />
+          <Route path="profile" element={<UserProfilePage roleType="admin" />} />
 
           {/* MODULES */}
           <Route path="doctors" element={<Doctors />} />
@@ -82,6 +85,7 @@ function App() {
 
         {/* ── SEPARATE DOCTOR DASHBOARD ── */}
         <Route path="/doctor/*" element={<DoctorApp />} />
+        <Route path="/reception/*" element={<ReceptionistApp />} />
 
         {/* FALLBACK */}
         <Route path="*" element={<Navigate to="/login" replace />} />

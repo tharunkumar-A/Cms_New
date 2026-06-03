@@ -1,0 +1,645 @@
+.rc-shell {
+  min-height: 100vh;
+  display: flex;
+  background: #f8fafc;
+  color: #071120;
+  font-family: "Inter", "Segoe UI", Arial, sans-serif;
+}
+
+.rc-sidebar {
+  width: 255px;
+  min-height: 100vh;
+  position: sticky;
+  top: 0;
+  background: #f8fafc;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  padding: 18px 12px;
+}
+
+.rc-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 2px 6px 22px;
+  border-bottom: 1px solid #e1e7ef;
+}
+
+.rc-brand-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: #0f9d9d;
+  border-radius: 10px;
+  box-shadow: 0 6px 14px rgba(15, 157, 157, 0.2);
+}
+
+.rc-brand strong,
+.rc-profile strong {
+  display: block;
+  font-size: 14px;
+  line-height: 1.1;
+}
+
+.rc-brand span,
+.rc-profile span,
+.rc-card-head p,
+.rc-page-head p {
+  display: block;
+  color: #40516a;
+  font-size: 12px;
+}
+
+.rc-section-label {
+  margin: 18px 12px 8px;
+  color: #314052;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.rc-nav {
+  display: grid;
+  gap: 7px;
+}
+
+.rc-nav-link {
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #0c1726;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.rc-nav-link.active {
+  color: #0f9d9d;
+  background: #dff3f3;
+  box-shadow: none;
+}
+
+.rc-help {
+  margin-top: auto;
+  padding: 18px;
+  border: 1px solid #cbddeb;
+  border-radius: 14px;
+  background: #e6f2f2;
+}
+
+.rc-help p {
+  margin: 8px 0 12px;
+  color: #314052;
+  font-size: 12px;
+}
+
+.rc-help button,
+.rc-confirm {
+  width: 100%;
+  height: 34px;
+  border: 0;
+  border-radius: 8px;
+  background: #0f9d9d;
+  color: #fff;
+  font-weight: 700;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 7px;
+}
+
+.rc-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.rc-topbar {
+  height: 86px;
+  padding: 16px 24px;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+}
+
+.rc-topbar h1 {
+  margin: 0 0 6px;
+  font-size: 16px;
+}
+
+.rc-crumbs,
+.rc-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #4d5b70;
+  font-size: 12px;
+}
+
+.rc-search {
+  width: 288px;
+  height: 36px;
+  border: 1px solid #d4dce8;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  background: #fff;
+}
+
+.rc-search input {
+  border: 0;
+  outline: 0;
+  width: 100%;
+  font-size: 14px;
+}
+
+.rc-bell {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  border: 1px solid #d4dce8;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.rc-bell span {
+  position: absolute;
+  right: -3px;
+  top: -6px;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: #f22635;
+  color: #fff;
+  font-size: 11px;
+}
+
+.rc-profile {
+  min-width: 190px;
+  height: 42px;
+  border: 1px solid #d4dce8;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 11px;
+  background: #fff;
+}
+
+.rc-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #0587d8;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.rc-content {
+  padding: 28px 30px 46px;
+}
+
+.rc-page-head,
+.rc-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.rc-page-head h2 {
+  margin: 0 0 6px;
+  font-size: 24px;
+}
+
+.rc-head-actions,
+.rc-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+
+.rc-btn {
+  height: 36px;
+  border: 1px solid #d9e1ec;
+  border-radius: 8px;
+  background: #fff;
+  color: #071120;
+  font-weight: 700;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 2px 5px rgba(12, 23, 38, 0.09);
+  cursor: pointer;
+}
+
+.rc-btn.primary {
+  background: #0f9d9d;
+  border-color: #0f9d9d;
+  color: #fff;
+}
+
+.rc-btn.ghost {
+  box-shadow: none;
+}
+
+.rc-btn.small {
+  height: 32px;
+  font-size: 12px;
+}
+
+.rc-stat-grid,
+.rc-action-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.rc-stat-card,
+.rc-action-grid button,
+.rc-card,
+.rc-modal {
+  background: #fff;
+  border: 1px solid #d8e0ea;
+  border-radius: 14px;
+  box-shadow: 0 2px 7px rgba(12, 23, 38, 0.08);
+}
+
+.rc-stat-card {
+  min-height: 126px;
+  padding: 20px;
+  position: relative;
+}
+
+.rc-stat-card > span {
+  position: absolute;
+  top: 22px;
+  right: 20px;
+  font-size: 12px;
+  color: #39475a;
+}
+
+.rc-stat-card p {
+  margin: 16px 0 8px;
+  color: #28384d;
+  font-size: 13px;
+}
+
+.rc-stat-card strong {
+  font-size: 24px;
+}
+
+.rc-stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+}
+
+.rc-stat-icon.blue,
+.rc-action-grid svg {
+  background: #dff3f3;
+  color: #0f9d9d;
+}
+
+.rc-stat-icon.amber {
+  background: #fff0d9;
+  color: #3f2a13;
+}
+
+.rc-stat-icon.green {
+  background: #def6ea;
+  color: #0ca66a;
+}
+
+.rc-action-grid button {
+  min-height: 80px;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 20px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.rc-action-grid svg {
+  width: 42px;
+  height: 42px;
+  padding: 10px;
+  border-radius: 12px;
+}
+
+.rc-action-grid strong {
+  display: block;
+  margin-bottom: 3px;
+}
+
+.rc-action-grid span {
+  color: #34435a;
+  font-size: 13px;
+}
+
+.rc-card {
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.rc-card h3 {
+  margin: 0 0 4px;
+  font-size: 16px;
+}
+
+.rc-table {
+  border: 1px solid #d9e1ec;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.rc-table-head,
+.rc-table-row {
+  display: grid;
+  align-items: center;
+  min-height: 42px;
+  padding: 0 16px;
+  font-size: 13px;
+}
+
+.rc-table-head {
+  background: #e9eff6;
+  color: #304158;
+}
+
+.rc-table-row {
+  background: #fff;
+}
+
+.rc-table-head.four,
+.rc-table-row.four {
+  grid-template-columns: 1.3fr 1.3fr 1fr 1fr;
+}
+
+.rc-table-head.five,
+.rc-table-row.five {
+  grid-template-columns: 0.8fr 1.4fr 1.5fr 1fr 2.4fr;
+}
+
+.rc-empty {
+  padding: 10px;
+  text-align: center;
+  color: #42526a;
+}
+
+.rc-row-actions button {
+  min-width: 76px;
+  height: 32px;
+  border: 1px solid #dce4ee;
+  border-radius: 9px;
+  background: #fff;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.rc-row-actions .danger {
+  background: #ee2334;
+  border-color: #ee2334;
+  color: #fff;
+}
+
+.rc-alert {
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border: 1px solid #d9e1ec;
+  border-radius: 9px;
+  color: #b4222a;
+  background: #fff;
+  font-size: 13px;
+}
+
+.rc-alert.error {
+  color: #f00;
+}
+
+.rc-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: rgba(7, 17, 32, 0.36);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+.rc-modal {
+  width: min(680px, 100%);
+  padding: 20px;
+}
+
+.rc-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.rc-booking-form,
+.rc-billing-form {
+  display: grid;
+  gap: 14px;
+}
+
+.rc-booking-form {
+  grid-template-columns: minmax(0, 1.35fr) minmax(340px, 0.65fr);
+  align-items: start;
+}
+
+.rc-booking-fields,
+.rc-slot-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.rc-slot-panel {
+  position: sticky;
+  top: 104px;
+  border: 1px solid #d9e6e6;
+  border-radius: 12px;
+  background: #f8fdfd;
+  padding: 14px;
+}
+
+.rc-booking-form label,
+.rc-billing-form label,
+.rc-form-grid label {
+  display: grid;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.rc-booking-form input,
+.rc-booking-form select,
+.rc-billing-form input,
+.rc-billing-form select,
+.rc-form-grid input,
+.rc-form-grid select {
+  height: 36px;
+  border: 1px solid #d7dfeb;
+  border-radius: 8px;
+  padding: 0 12px;
+  background: #fff;
+}
+
+.rc-slot-head {
+  display: flex;
+  justify-content: space-between;
+  color: #34435a;
+  font-size: 12px;
+}
+
+.rc-slots {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.rc-slots button {
+  height: 36px;
+  border: 1px solid #cce4d7;
+  border-radius: 8px;
+  background: #e7f6ef;
+  color: #00a263;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.rc-slots button.selected {
+  outline: 2px solid #0f9d9d;
+}
+
+.rc-slots button.booked {
+  background: #f1f4f7;
+  color: #687589;
+}
+
+.rc-patient-summary,
+.rc-total,
+.rc-invoice-box {
+  border: 1px solid #d9e1ec;
+  border-radius: 9px;
+  background: #f8fbff;
+  padding: 14px;
+}
+
+.rc-patient-summary span,
+.rc-invoice-box span {
+  display: block;
+  margin-top: 6px;
+  color: #314052;
+  font-size: 12px;
+}
+
+.rc-total {
+  background: #eaf0f7;
+}
+
+.rc-total span {
+  display: block;
+  color: #314052;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.rc-total strong {
+  font-size: 20px;
+}
+
+.rc-invoice-box {
+  display: grid;
+  gap: 10px;
+}
+
+.rc-invoice-box p {
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  color: #34435a;
+}
+
+.rc-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+@media (max-width: 900px) {
+  .rc-shell {
+    display: block;
+  }
+
+  .rc-sidebar {
+    position: static;
+    width: auto;
+    min-height: auto;
+  }
+
+  .rc-topbar,
+  .rc-page-head,
+  .rc-card-head {
+    height: auto;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .rc-top-actions {
+    flex-wrap: wrap;
+  }
+
+  .rc-stat-grid,
+  .rc-action-grid,
+  .rc-booking-form,
+  .rc-slots,
+  .rc-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .rc-slot-panel {
+    position: static;
+  }
+
+  .rc-search,
+  .rc-profile {
+    width: 100%;
+  }
+
+  .rc-table {
+    overflow-x: auto;
+  }
+
+  .rc-table-head,
+  .rc-table-row {
+    min-width: 780px;
+  }
+}

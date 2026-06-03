@@ -1,45 +1,9 @@
-import React, { useState } from "react";
-import { Bell, Calendar, ChevronDown, Menu, Search } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import React from "react";
+import { Bell, Calendar, Menu, Search } from "lucide-react";
+import UserProfileMenu from "../profile/UserProfileMenu";
 import "./DoctorTopbar.css";
 
-const getInitials = (name) =>
-  String(name || "D")
-    .split(" ")
-    .filter(Boolean)
-    .map((part) => part[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase() || "D";
-
-const clearSession = () => {
-  [
-    "token",
-    "adminToken",
-    "doctorToken",
-    "adminEmail",
-    "doctorEmail",
-    "adminRole",
-    "doctorRole",
-    "userRole",
-    "doctorId",
-    "doctorName",
-    "hospitalId",
-    "hospitalName",
-  ].forEach((key) => localStorage.removeItem(key));
-};
-
 function DoctorTopbar({ title, onMenuToggle }) {
-  const navigate = useNavigate();
-  const [profileOpen, setProfileOpen] = useState(false);
-  const doctorName = localStorage.getItem("doctorName") || "Doctor";
-  const doctorEmail = localStorage.getItem("doctorEmail") || "";
-
-  const handleLogout = () => {
-    clearSession();
-    navigate("/login", { replace: true });
-  };
-
   return (
     <header className="dr-topbar">
       <div className="dr-topbar-left">
@@ -74,29 +38,7 @@ function DoctorTopbar({ title, onMenuToggle }) {
           <Calendar size={18} />
         </button>
 
-        <div className="dr-profile-wrap">
-          <button
-            className="dr-topbar-profile"
-            type="button"
-            onClick={() => setProfileOpen((open) => !open)}
-          >
-            <div className="dr-profile-avatar">{getInitials(doctorName)}</div>
-            <span className="dr-profile-name">Dr. {doctorName}</span>
-            <ChevronDown size={14} className="dr-profile-chevron" />
-          </button>
-
-          {profileOpen ? (
-            <div className="dr-profile-menu">
-              <div className="dr-profile-menu-head">
-                <p>Dr. {doctorName}</p>
-                <span>{doctorEmail || "doctor account"}</span>
-              </div>
-              <button type="button" onClick={handleLogout}>
-                Sign out
-              </button>
-            </div>
-          ) : null}
-        </div>
+        <UserProfileMenu roleType="doctor" />
       </div>
     </header>
   );

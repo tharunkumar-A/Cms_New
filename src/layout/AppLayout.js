@@ -8,10 +8,12 @@ const useAuth = () => {
   const token =
     localStorage.getItem("token") ||
     localStorage.getItem("adminToken") ||
-    localStorage.getItem("doctorToken");
+    localStorage.getItem("doctorToken") ||
+    localStorage.getItem("receptionistToken");
 
   const role =
     localStorage.getItem("adminRole") ||
+    localStorage.getItem("receptionistRole") ||
     localStorage.getItem("userRole") ||
     "";
 
@@ -19,9 +21,13 @@ const useAuth = () => {
     String(role).toLowerCase() === "doctor" ||
     Boolean(localStorage.getItem("doctorToken"));
 
+  const isReceptionist =
+    String(role).toLowerCase() === "receptionist" ||
+    Boolean(localStorage.getItem("receptionistToken"));
+
   return {
     user: token
-      ? { name: "Admin", isDoctor }
+      ? { name: "Admin", isDoctor, isReceptionist }
       : null,
   };
 };
@@ -32,6 +38,7 @@ function AppLayout() {
 
   if (!user) return <Navigate to="/login" replace />;
   if (user.isDoctor) return <Navigate to="/doctor/dashboard" replace />;
+  if (user.isReceptionist) return <Navigate to="/reception/dashboard" replace />;
 
   return (
     <div className="layout">

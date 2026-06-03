@@ -7,6 +7,8 @@ import Consultation from "./pages/Consultation";
 import Prescription from "./pages/Prescription";
 import DoctorAppointments from "./pages/DoctorAppointments";
 import Completion from "./pages/Completion";
+import UserProfilePage from "../profile/UserProfilePage";
+import DoctorSettingsPage from "./pages/DoctorSettings";
 
 /* Simple settings placeholder */
 function DoctorSettings() {
@@ -34,7 +36,8 @@ function DoctorApp() {
         <Route path="prescription" element={<Prescription />} />
         <Route path="appointments" element={<DoctorAppointments />} />
         <Route path="completion" element={<Completion />} />
-        <Route path="settings" element={<DoctorSettings />} />
+        <Route path="profile" element={<UserProfilePage roleType="doctor" />} />
+        <Route path="settings" element={<DoctorSettingsPage />} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="dashboard" replace />} />
