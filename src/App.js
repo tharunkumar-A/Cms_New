@@ -4,6 +4,17 @@ import AppLayout from "./layout/AppLayout";
 import DoctorApp from "./doctors/DoctorApp";
 import ReceptionistApp from "./Recepitionist/ReceptionistApp";
 import UserProfilePage from "./profile/UserProfilePage";
+import SuperAdminDashboard from "./pages/SUPERADMIN/Dashboard/Dashboard";
+import SuperAdminClinics from "./pages/SUPERADMIN/Clinics/Clinics";
+import SuperAdminClinicForm from "./pages/SUPERADMIN/Clinics/ClinicForm";
+import SuperAdminAdmins from "./pages/SUPERADMIN/Admins/Admins";
+import SuperAdminUsers from "./pages/SUPERADMIN/Users/Users";
+import SuperAdminRolesPermissions from "./pages/SUPERADMIN/RolesPermissions/RolesPermissions";
+import SuperAdminSettings from "./pages/SUPERADMIN/Settings/Settings";
+import SuperAdminReports from "./pages/SUPERADMIN/Reports/Reports";
+import SuperAdminAuditLogs from "./pages/SUPERADMIN/AuditLogs/AuditLogs";
+import SuperAdminNotifications from "./pages/SUPERADMIN/Notifications/Notifications";
+import SuperAdminProfile from "./pages/SUPERADMIN/Profile/Profile";
 
 // Pages
 import AdminLogin from "./Login/Adminlogin";
@@ -28,6 +39,7 @@ import Reports from "./pages/REPORTS/Reports";
 import DailyReport from "./pages/REPORTS/DailyReport";
 import RevenueReport from "./pages/REPORTS/RevenueReport";
 import DoctorWiseReport from "./pages/REPORTS/DoctorWiseReport";
+import "./pages/SUPERADMIN/SuperAdmin.css";
 
 
 function App() {
@@ -74,6 +86,20 @@ function App() {
           <Route path="reports/daily" element={<DailyReport />} />
           <Route path="RevenueReport/daily" element={<RevenueReport />} />
           <Route path="DoctorWiseReport/daily" element={<DoctorWiseReport />} />
+
+          <Route path="superadmin" element={<Navigate to="/superadmin/dashboard" replace />} />
+          <Route path="superadmin/dashboard" element={<SuperAdminDashboard />} />
+          <Route path="superadmin/clinics" element={<SuperAdminClinics />} />
+          <Route path="superadmin/clinics/add" element={<SuperAdminClinicForm mode="add" />} />
+          <Route path="superadmin/clinics/edit/:id" element={<SuperAdminClinicForm mode="edit" />} />
+          <Route path="superadmin/admins" element={<SuperAdminAdmins />} />
+          <Route path="superadmin/users" element={<SuperAdminUsers />} />
+          <Route path="superadmin/roles" element={<SuperAdminRolesPermissions />} />
+          <Route path="superadmin/settings" element={<SuperAdminSettings />} />
+          <Route path="superadmin/reports" element={<SuperAdminReports />} />
+          <Route path="superadmin/audit-logs" element={<SuperAdminAuditLogs />} />
+          <Route path="superadmin/notifications" element={<SuperAdminNotifications />} />
+          <Route path="superadmin/profile" element={<SuperAdminProfile />} />
 
 
 

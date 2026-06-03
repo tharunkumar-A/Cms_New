@@ -77,8 +77,10 @@
 
 
 import React from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import {
+  Bell,
+  Building2,
   LayoutDashboard,
   Stethoscope,
   Users,
@@ -88,6 +90,9 @@ import {
   Settings2,
   FileBarChart2,
   HeartPulse,
+  ListChecks,
+  ShieldCheck,
+  UserCog,
 } from "lucide-react";
 
 import "./Sidebar.css";
@@ -101,9 +106,27 @@ const items = [
   { to: "/appointments", label: "Appointments", icon: CalendarDays },
   { to: "/DoctorSchedule/schedule", label: "Schedule Settings", icon: Settings2 },
   { to: "/reports", label: "Reports", icon: FileBarChart2 },
+  { to: "/superadmin/dashboard", label: "Super Admin", icon: ShieldCheck },
+];
+
+const superAdminItems = [
+  { to: "/superadmin/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/superadmin/clinics", label: "Clinics", icon: Building2 },
+  { to: "/superadmin/admins", label: "Admins", icon: UserCog },
+  { to: "/superadmin/users", label: "Users", icon: Users },
+  { to: "/superadmin/roles", label: "Roles & Permissions", icon: ShieldCheck },
+  { to: "/superadmin/settings", label: "Settings", icon: Settings2 },
+  { to: "/superadmin/reports", label: "Reports", icon: FileBarChart2 },
+  { to: "/superadmin/audit-logs", label: "Audit Logs", icon: ListChecks },
+  { to: "/superadmin/notifications", label: "Notifications", icon: Bell },
+  { to: "/superadmin/profile", label: "Profile", icon: UserRound },
 ];
 
 function Sidebar() {
+  const location = useLocation();
+  const isSuperAdmin = location.pathname.startsWith("/superadmin");
+  const navItems = isSuperAdmin ? superAdminItems : items;
+
   return (
     <aside className="sidebar">
 
@@ -114,15 +137,15 @@ function Sidebar() {
         </div>
         <div>
           <h3>MediCore</h3>
-          <span>Admin Console</span>
+          <span>{isSuperAdmin ? "Super Admin Console" : "Admin Console"}</span>
         </div>
       </div>
 
       {/* NAV */}
       <div className="nav">
-        <p className="menu-title">MAIN MENU</p>
+        <p className="menu-title">{isSuperAdmin ? "SUPER ADMIN" : "MAIN MENU"}</p>
 
-        {items.map(({ to, label, icon: Icon }) => (
+        {navItems.map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
             to={to}
