@@ -13,6 +13,9 @@ const emptyAdmin = {
   status: "Active",
 };
 
+
+
+
 function Admins() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("All");
