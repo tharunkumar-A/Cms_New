@@ -76,6 +76,7 @@ import {
 import { useLocation, useNavigate } from "react-router-dom";
 
 import "./Topbar.css";
+import NotificationPopup from "../components/NotificationPopup";
 import UserProfileMenu from "../profile/UserProfileMenu";
 import { apiUrl } from "../config/api";
 
@@ -194,11 +195,7 @@ function Topbar({ onMenu }) {
   }, [isSuperAdmin]);
 
   const openNotifications = () => {
-    navigate(
-      isSuperAdmin
-        ? "/superadmin/notifications"
-        : "/dashboard#recent-activity"
-    );
+    // keep for compatibility if needed
   };
 
   return (
@@ -264,32 +261,7 @@ function Topbar({ onMenu }) {
       {/* RIGHT */}
 
       <div className="topbar-right">
-
-        {/* NOTIFICATION */}
-
-        <button
-          type="button"
-          className="topbar-notification"
-          onClick={openNotifications}
-          title={isSuperAdmin ? "Notifications" : "Recent Activity"}
-          aria-label={
-            isSuperAdmin
-              ? "Open notifications"
-              : `Open recent activity. ${activityCount} events.`
-          }
-        >
-
-          <Bell size={18} />
-
-          {!isSuperAdmin && activityCount > 0 ? (
-            <span className="topbar-notification-count">
-              {activityCount > 99 ? "99+" : activityCount}
-            </span>
-          ) : null}
-
-        </button>
-
-        {/* PROFILE */}
+        <NotificationPopup isSuperAdmin={isSuperAdmin} />
 
         <UserProfileMenu roleType="admin" />
 

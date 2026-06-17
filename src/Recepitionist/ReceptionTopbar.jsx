@@ -1,6 +1,7 @@
 import React from "react";
 import { Bell, ChevronRight, Search } from "lucide-react";
 import { useLocation } from "react-router-dom";
+import NotificationPopup from "../components/NotificationPopup";
 import UserProfileMenu from "../profile/UserProfileMenu";
 
 function ReceptionTopbar({ title }) {
@@ -32,10 +33,7 @@ function ReceptionTopbar({ title }) {
           <Search size={18} />
           <input placeholder="Search patients, doctors, bills..." />
         </label>
-        <button className="rc-bell" type="button" aria-label="Notifications">
-          <Bell size={18} />
-          <span>1</span>
-        </button>
+        <NotificationPopup />
         <UserProfileMenu roleType="receptionist" />
       </div>
     </header>

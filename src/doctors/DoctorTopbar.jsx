@@ -1,5 +1,6 @@
 import React from "react";
 import { Menu, Search } from "lucide-react";
+import NotificationPopup from "../components/NotificationPopup";
 import UserProfileMenu from "../profile/UserProfileMenu";
 import "./DoctorTopbar.css";
 
@@ -29,6 +30,7 @@ function DoctorTopbar({ title, onMenuToggle }) {
       </div>
 
       <div className="dr-topbar-right">
+        <NotificationPopup />
         <UserProfileMenu roleType="doctor" />
       </div>
     </header>
