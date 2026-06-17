@@ -1448,6 +1448,27 @@ export const createNotification = async (notification) => {
   }
 };
 
+export const markNotificationRead = async (id) => {
+  if (!id) return null;
+
+  try {
+    const result = await superAdminRequest(`${SUPER_ADMIN_API.notifications}/${id}/read`, {
+      method: "PUT",
+    });
+    return result;
+  } catch (error) {
+    // fallback: mark local notification as read
+    try {
+      const local = readLocalList(LOCAL_NOTIFICATIONS_KEY);
+      const updated = local.map((n) => (n.id === id ? { ...n, status: "Read" } : n));
+      writeLocalList(LOCAL_NOTIFICATIONS_KEY, updated);
+      return updated.find((n) => n.id === id) || null;
+    } catch {
+      return null;
+    }
+  }
+};
+
 const getCurrentSessionRole = () =>
   localStorage.getItem("adminRole") ||
   localStorage.getItem("doctorRole") ||
