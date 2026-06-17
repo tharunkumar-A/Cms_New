@@ -43,7 +43,7 @@ function AuditLogs() {
   const rows = useMemo(() => {
     const query = search.trim().toLowerCase();
     return auditLogs.filter((log) => {
-      const matchesSearch = [log.user, log.action, log.timestamp, log.module, log.role, log.ipAddress]
+      const matchesSearch = [log.user, log.action, log.timestamp, log.module, log.role]
         .some((value) => String(value).toLowerCase().includes(query));
       const matchesModule = module === "All" || log.module === module;
       return matchesSearch && matchesModule;
@@ -56,7 +56,6 @@ function AuditLogs() {
     { key: "timestamp", label: "Timestamp", width: "minmax(170px, 1fr)" },
     { key: "module", label: "Module" },
     { key: "role", label: "Role" },
-    { key: "ipAddress", label: "IP Address" },
   ];
 
   return (
