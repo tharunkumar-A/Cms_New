@@ -121,6 +121,28 @@ const getDisplayName = (authData, claims, email, role) => {
   return 'Admin';
 };
 
+const getLoginIp = async (authData, claims) => {
+  const expectedIp = getFirstText(
+    authData.ipAddress,
+    authData.ip,
+    authData.clientIp,
+    authData.IPAddress,
+    authData.remoteIp,
+    authData.RemoteIp,
+    getClaim(claims, 'ipAddress', 'ip', 'clientIp', 'IPAddress', 'remoteIp', 'RemoteIp')
+  );
+
+  if (expectedIp) return expectedIp;
+
+  try {
+    const response = await fetch('https://api.ipify.org?format=json');
+    const data = await response.json();
+    return getFirstText(data.ip, data?.IPAddress, data?.clientIp);
+  } catch {
+    return '';
+  }
+};
+
 const normalizeRole = (role) =>
   String(role || '')
     .trim()
@@ -345,6 +367,7 @@ const AdminLogin = () => {
         authData.clinic ||
         getClaim(claims, 'HospitalName', 'hospitalName', 'ClinicName', 'clinicName', 'AssignedClinic', 'assignedClinic') ||
         '';
+      const loginIp = await getLoginIp(authData, claims);
 
       clearStoredSession();
       localStorage.setItem('token', token);
@@ -357,6 +380,7 @@ const AdminLogin = () => {
         action: `${displayName} logged in`,
         module: 'Login',
         role,
+        ipAddress: loginIp,
       });
 
       if (normalizedRole === 'superadmin') {

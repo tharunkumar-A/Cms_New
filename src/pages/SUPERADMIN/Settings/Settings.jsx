@@ -109,7 +109,16 @@ function Settings() {
 
     try {
       await updateBySection[activeSection](activeSettings);
-      setSuccess(`${activeTab} saved.`);
+      // Reload settings to confirm they were saved
+      const updatedSettings = await fetchSettings();
+      setSettings({
+        general: { ...defaultSettings.general, ...updatedSettings.general },
+        email: { ...defaultSettings.email, ...updatedSettings.email },
+        sms: { ...defaultSettings.sms, ...updatedSettings.sms },
+        payment: { ...defaultSettings.payment, ...updatedSettings.payment },
+      });
+      setSuccess(`${activeTab} saved successfully.`);
+      setTimeout(() => setSuccess(""), 3000);
     } catch (requestError) {
       setError(requestError.message || "Unable to save settings.");
     } finally {

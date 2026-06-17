@@ -1,8 +1,11 @@
 import React, { useState } from "react";
-import { Outlet, Navigate } from "react-router-dom";
+import { Outlet, Navigate, useLocation } from "react-router-dom";
 import Sidebar from "../Sidebar/Sidebar";
 import Topbar from "../Topbar/Topbar";
 import "./AppLayout.css";
+
+const normalizeRole = (role = "") =>
+  String(role || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "");
 
 const useAuth = () => {
   const token =
@@ -17,28 +20,29 @@ const useAuth = () => {
     localStorage.getItem("userRole") ||
     "";
 
-  const isDoctor =
-    String(role).toLowerCase() === "doctor" ||
-    Boolean(localStorage.getItem("doctorToken"));
+  const normalizedRole = normalizeRole(role);
 
-  const isReceptionist =
-    String(role).toLowerCase() === "receptionist" ||
-    Boolean(localStorage.getItem("receptionistToken"));
+  const isDoctor = normalizedRole === "doctor" || Boolean(localStorage.getItem("doctorToken"));
+  const isReceptionist = normalizedRole === "receptionist" || Boolean(localStorage.getItem("receptionistToken"));
+  const isSuperAdmin = normalizedRole === "superadmin";
 
   return {
-    user: token
-      ? { name: "Admin", isDoctor, isReceptionist }
-      : null,
+    user: token ? { name: "Admin", isDoctor, isReceptionist, isSuperAdmin } : null,
   };
 };
 
 function AppLayout() {
   const [open, setOpen] = useState(false);
   const { user } = useAuth();
+  const location = useLocation();
 
   if (!user) return <Navigate to="/login" replace />;
   if (user.isDoctor) return <Navigate to="/doctor/dashboard" replace />;
   if (user.isReceptionist) return <Navigate to="/reception/dashboard" replace />;
+
+  if (location.pathname.startsWith("/superadmin") && !user.isSuperAdmin) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   return (
     <div className="layout">

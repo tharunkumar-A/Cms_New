@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Eye, Plus, Trash2 } from "lucide-react";
+import { Eye, Pencil, Plus, Trash2 } from "lucide-react";
 import Header from "../../../components/superadmin/Header";
 import DataTable from "../../../components/superadmin/DataTable";
 import SearchFilter from "../../../components/superadmin/SearchFilter";
@@ -51,6 +51,11 @@ const getAdminClinicName = (admin, clinics = []) =>
   clinics.find((clinic) => String(clinic.id) === String(getAdminClinicId(admin, clinics)))?.name ||
   "";
 
+const getAdminKey = (admin = {}) =>
+  String(admin.email || admin.id || admin.name || admin.raw?.email || admin.raw?.id || "")
+    .trim()
+    .toLowerCase();
+
 const isCurrentAdmin = (admin = {}) =>
   String(admin.email || admin.raw?.adminEmail || admin.raw?.AdminEmail || "").toLowerCase() ===
   String(localStorage.getItem("adminEmail") || "").toLowerCase();
@@ -90,7 +95,8 @@ const mergeAdmins = (adminRows = [], userRows = []) => {
   const rows = new Map();
 
   adminRows.forEach((admin) => {
-    const key = String(admin.email || admin.id || "").toLowerCase();
+    const key = getAdminKey(admin);
+    if (!key) return;
     rows.set(key, { ...admin, source: admin.source || "admins" });
   });
 
@@ -98,7 +104,8 @@ const mergeAdmins = (adminRows = [], userRows = []) => {
     .filter((user) => !user.isDeleted && getUserAdminRole(user))
     .map(normalizeUserAdmin)
     .forEach((admin) => {
-      const key = String(admin.email || admin.id || "").toLowerCase();
+      const key = getAdminKey(admin);
+      if (!key) return;
       rows.set(key, { ...rows.get(key), ...admin });
     });
 
@@ -168,6 +175,26 @@ function Admins() {
     setEditingAdminId("");
     setForm(emptyAdmin);
     setOriginalAdminClinic(emptyAdminClinic);
+    setShowForm(true);
+    setError("");
+  };
+
+  const openEditForm = async (admin) => {
+    setSelectedAdmin(admin);
+    setEditingAdminId(admin.id);
+    setForm({
+      fullName: admin.name || "",
+      email: admin.email || "",
+      phone: admin.phone || "",
+      temporaryPassword: "",
+      role: admin.role || "Admin",
+      assignedClinicId: getAdminClinicId(admin, clinics) || "",
+      sendWelcomeEmail: false,
+    });
+    setOriginalAdminClinic({
+      id: getAdminClinicId(admin, clinics) || "",
+      name: getAdminClinicName(admin, clinics) || "",
+    });
     setShowForm(true);
     setError("");
   };
@@ -337,7 +364,7 @@ function Admins() {
 
   const columns = [
     { key: "name", label: "Name" },
-    { key: "email", label: "Email", width: "minmax(170px, 1.2fr)" },
+    { key: "email", label: "Email", width: "minmax(220px, 1.5fr)", cellClassName: "sa-table-cell--wrap" },
     { key: "assignedClinic", label: "Assigned Clinic" },
     { key: "role", label: "Role" },
     {
@@ -353,11 +380,14 @@ function Admins() {
     {
       key: "actions",
       label: "Actions",
-      width: "minmax(112px, 0.7fr)",
+      width: "minmax(155px, 1fr)",
       render: (admin) => (
         <div className="sa-actions">
           <button className="sa-icon-btn" onClick={() => setSelectedAdmin(admin)} title="View admin">
             <Eye size={15} />
+          </button>
+          <button className="sa-icon-btn" onClick={() => openEditForm(admin)} title="Edit admin">
+            <Pencil size={15} />
           </button>
           <button className="sa-icon-btn" onClick={() => handleDelete(admin)} title="Delete admin">
             <Trash2 size={15} />

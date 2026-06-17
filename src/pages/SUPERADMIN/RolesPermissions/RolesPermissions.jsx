@@ -5,17 +5,26 @@ import DataTable from "../../../components/superadmin/DataTable";
 import PermissionMatrix from "../../../components/superadmin/PermissionMatrix";
 import {
   deleteRole,
+  fetchAdmins,
   fetchRole,
   fetchRoles,
+  fetchUsers,
+  persistRoleOverride,
   saveRole,
   updateRolePermissions,
 } from "../superAdminApi";
 
 const permissionOptions = ["View", "Create", "Edit", "Delete"];
+const DEFAULT_SYSTEM_ROLES = ["Admin", "Doctor", "Patient", "Receptionist"];
+
+const isDefaultRole = (role = {}) => {
+  const roleName = String(role.name || role.roleName || "").toLowerCase();
+  return DEFAULT_SYSTEM_ROLES.some(r => r.toLowerCase() === roleName);
+};
 
 const emptyRole = {
-  name: "",
-  roleName: "",
+  name: "Admin",
+  roleName: "Admin",
   module: "General",
   status: "Active",
   permissions: ["View"],
@@ -23,9 +32,13 @@ const emptyRole = {
 
 const getRoleKey = (role = {}) => role.id || role.key || role.roleName || role.name;
 
+const isAdminRole = (role = {}) =>
+  String(role.roleName || role.name || "").trim().toLowerCase() === "admin";
+
 function RolesPermissions() {
   const [showForm, setShowForm] = useState(false);
   const [roles, setRoles] = useState([]);
+  const [admins, setAdmins] = useState([]);
   const [form, setForm] = useState(emptyRole);
   const [editingRoleId, setEditingRoleId] = useState("");
   const [loading, setLoading] = useState(true);
@@ -33,17 +46,68 @@ function RolesPermissions() {
   const [updatingPermission, setUpdatingPermission] = useState("");
   const [error, setError] = useState("");
 
+  const getAdminRowKey = (admin = {}) =>
+    String(admin.email || admin.id || admin.name || admin.raw?.email || admin.raw?.id || "")
+      .trim()
+      .toLowerCase();
+
+  const mergeAdminRows = (adminRows = [], userRows = []) => {
+    const rows = new Map();
+
+    adminRows.forEach((admin) => {
+      const key = getAdminRowKey(admin);
+      if (!key) return;
+      rows.set(key, { ...admin, source: admin.source || "admins" });
+    });
+
+    userRows
+      .filter((user) => {
+        const role = String(user.role || user.type || "").trim().toLowerCase();
+        return role === "admin" || role === "clinicadmin" || role === "clinic admin";
+      })
+      .map((user) => ({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone || user.mobileNumber,
+        assignedClinic: user.clinic,
+        assignedClinicId: user.clinicId || user.hospitalId,
+        role: "Admin",
+        status: user.status,
+        raw: user.raw || user,
+        source: "users",
+      }))
+      .forEach((admin) => {
+        const key = getAdminRowKey(admin);
+        if (!key) return;
+        rows.set(key, { ...rows.get(key), ...admin });
+      });
+
+    return Array.from(rows.values());
+  };
+
   const loadRoles = async () => {
     setLoading(true);
     setError("");
 
-    try {
-      setRoles(await fetchRoles());
-    } catch (requestError) {
-      setError(requestError.message || "Unable to load roles.");
-    } finally {
-      setLoading(false);
+    const [rolesResult, adminsResult, usersResult] = await Promise.allSettled([
+      fetchRoles(),
+      fetchAdmins(),
+      fetchUsers(),
+    ]);
+
+    if (rolesResult.status === "fulfilled") {
+      setRoles(rolesResult.value);
+    } else {
+      setRoles([]);
+      setError(rolesResult.reason?.message || "Unable to load roles.");
     }
+
+    const adminRows = adminsResult.status === "fulfilled" ? adminsResult.value : [];
+    const userRows = usersResult.status === "fulfilled" ? usersResult.value : [];
+    setAdmins(mergeAdminRows(adminRows, userRows));
+
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -55,6 +119,42 @@ function RolesPermissions() {
     setForm(emptyRole);
     setShowForm(true);
     setError("");
+  };
+
+  const visibleRoles = roles.filter(isAdminRole);
+
+  const getRoleAdminNames = (role) => {
+    const roleName = String(role.roleName || role.name || "").trim().toLowerCase();
+    return admins
+      .filter((admin) => String(admin.role || "").trim().toLowerCase() === roleName)
+      .map((admin) => admin.name)
+      .filter(Boolean);
+  };
+
+  const getRoleUserCount = (role) => {
+    const adminNames = getRoleAdminNames(role);
+    if (adminNames.length > 0) return adminNames.length;
+    return role.users || 0;
+  };
+
+  const renderRoleAdminNames = (role) => {
+    const adminNames = getRoleAdminNames(role);
+    if (!adminNames.length) return null;
+
+    const visibleNames = adminNames.slice(0, 5);
+    const extraCount = adminNames.length - visibleNames.length;
+
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <div>{`${adminNames.length} admin${adminNames.length !== 1 ? "s" : ""}`}</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 2, fontSize: 12, lineHeight: 1.4, color: "#444" }}>
+          {visibleNames.map((name) => (
+            <span key={name}>{name}</span>
+          ))}
+          {extraCount > 0 ? <span>{`+${extraCount} more`}</span> : null}
+        </div>
+      </div>
+    );
   };
 
   const openEditForm = async (role) => {
@@ -150,6 +250,11 @@ function RolesPermissions() {
   };
 
   const handleDelete = async (role) => {
+    if (isDefaultRole(role)) {
+      setError(`Cannot delete system-defined role: ${role.name}`);
+      return;
+    }
+
     const confirmed = window.confirm(`Delete ${role.name || "this role"}?`);
     if (!confirmed) return;
 
@@ -185,6 +290,7 @@ function RolesPermissions() {
     );
 
     if (role.canPersistPermissions === false || !role.id) {
+      persistRoleOverride(role, { permissions: nextPermissions });
       setUpdatingPermission("");
       return;
     }
@@ -196,10 +302,11 @@ function RolesPermissions() {
       });
       await loadRoles();
     } catch (requestError) {
+      persistRoleOverride(role, { permissions: nextPermissions });
       setError(requestError.message || "Unable to update permissions.");
       setRoles((currentRoles) =>
         currentRoles.map((item) =>
-          getRoleKey(item) === roleKey ? { ...item, permissions: currentPermissions } : item
+          getRoleKey(item) === roleKey ? { ...item, permissions: nextPermissions } : item
         )
       );
     } finally {
@@ -210,12 +317,41 @@ function RolesPermissions() {
   const columns = [
     { key: "name", label: "Role" },
     { key: "module", label: "Module" },
-    { key: "users", label: "Assigned Users", width: "minmax(110px, 0.7fr)" },
+    {
+      key: "users",
+      label: "Assigned Users",
+      width: "minmax(140px, 1fr)",
+      cellClassName: "sa-table-cell--wrap",
+      render: (role) => {
+        const adminNames = getRoleAdminNames(role);
+        const userCount = getRoleUserCount(role);
+        if (adminNames.length > 0) {
+          return (
+            <div className="sa-role-admin-list">
+              <div>{`${adminNames.length} admin${adminNames.length !== 1 ? "s" : ""}`}</div>
+              <div className="sa-role-admin-names">
+                {adminNames.map((name) => (
+                  <div key={name} className="sa-role-admin-name">
+                    {name}
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        }
+        return userCount === 0 ? "0 admins" : `${userCount} admin${userCount !== 1 ? "s" : ""}`;
+      },
+    },
     {
       key: "permissions",
       label: "Permissions",
       width: "minmax(220px, 1.3fr)",
-      render: (role) => role.permissions?.length ? role.permissions.join(", ") : "-",
+      render: (role) => {
+        const perms = Array.isArray(role.permissions) && role.permissions.length > 0
+          ? role.permissions.join(", ")
+          : "View";
+        return perms;
+      },
     },
     {
       key: "actions",
@@ -223,6 +359,8 @@ function RolesPermissions() {
       width: "minmax(112px, 0.7fr)",
       render: (role) => {
         const canUseRemoteActions = role.canPersistPermissions !== false && role.id;
+        const isSystemRole = isDefaultRole(role);
+        const canDelete = canUseRemoteActions && !isSystemRole;
 
         return (
           <div className="sa-actions">
@@ -236,9 +374,9 @@ function RolesPermissions() {
             </button>
             <button
               className="sa-icon-btn"
-              disabled={!canUseRemoteActions}
+              disabled={!canDelete}
               onClick={() => handleDelete(role)}
-              title={canUseRemoteActions ? "Delete role" : "Backend id unavailable"}
+              title={isSystemRole ? "Cannot delete system-defined role" : canUseRemoteActions ? "Delete role" : "Backend id unavailable"}
             >
               <Trash2 size={15} />
             </button>
@@ -269,8 +407,8 @@ function RolesPermissions() {
             <div className="sa-form-field">
               <label>Role Name</label>
               <input
-                name="name"
-                value={form.name}
+                name="roleName"
+                value={form.roleName}
                 onChange={(event) =>
                   setForm((current) => ({
                     ...current,
@@ -278,8 +416,9 @@ function RolesPermissions() {
                     roleName: event.target.value,
                   }))
                 }
-                placeholder="Enter role name"
+                placeholder="Admin"
                 required
+                disabled
               />
             </div>
             <div className="sa-form-field">
@@ -326,7 +465,7 @@ function RolesPermissions() {
 
       <DataTable
         columns={columns}
-        rows={roles}
+        rows={visibleRoles}
         loading={loading}
         error={!showForm ? error : ""}
         emptyMessage="No roles found."
@@ -334,9 +473,9 @@ function RolesPermissions() {
 
       <div className="sa-panel" style={{ marginTop: 16 }}>
         <h3>Assign Permissions</h3>
-        <p>Permission matrix for the current role list.</p>
+        <p>Permission matrix for the current Admin role only.</p>
         <PermissionMatrix
-          roles={roles}
+          roles={visibleRoles}
           onToggle={handleMatrixPermissionToggle}
           updatingKey={updatingPermission}
         />
