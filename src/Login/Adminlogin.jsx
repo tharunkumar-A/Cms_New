@@ -6,7 +6,7 @@ import { apiUrl } from '../config/api';
 import { recordAuditLog } from '../pages/SUPERADMIN/superAdminApi';
 import { useToast } from '../components/ToastProvider';
 import { validateGmail } from '../utils/validation';
-
+import { fetchAndStoreRolePermissions } from '../utils/authorization';
 const EyeIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
@@ -391,6 +391,9 @@ const AdminLogin = () => {
         localStorage.setItem('adminRole', 'superadmin');
         localStorage.setItem('adminEmail', loginEmail);
         localStorage.setItem('adminName', displayName);
+        try {
+          await fetchAndStoreRolePermissions('superadmin');
+        } catch {}
         toast.success('Login successful');
         navigate('/superadmin/dashboard', { replace: true });
         return;
@@ -422,6 +425,9 @@ const AdminLogin = () => {
       localStorage.setItem('adminEmail', loginEmail);
       localStorage.setItem('adminName', displayName);
       toast.success('Login successful');
+      try {
+        await fetchAndStoreRolePermissions(role);
+      } catch {}
       navigate('/dashboard', { replace: true });
     } catch {
       setErrors({
