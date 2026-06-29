@@ -1,5 +1,5 @@
 import { validateRequired } from "./validation";
-import { INDIA_COUNTRY } from "./indianLocations";
+import { INDIA_COUNTRY, INDIAN_STATES } from "./indianLocations";
 
 export const emptyAddressParts = {
   streetVillage: "",
@@ -52,7 +52,16 @@ export const parseAddress = (address = "") => {
     state = normalized[2] || "";
   } else if (normalized.length === 2) {
     streetVillage = normalized[0] || "";
-    city = normalized[1] || "";
+    if (
+      INDIAN_STATES.some(
+        (stateName) =>
+          stateName.toLowerCase() === String(normalized[1] || "").toLowerCase()
+      )
+    ) {
+      state = normalized[1] || "";
+    } else {
+      city = normalized[1] || "";
+    }
   } else if (normalized.length === 1) {
     streetVillage = normalized[0] || "";
   }

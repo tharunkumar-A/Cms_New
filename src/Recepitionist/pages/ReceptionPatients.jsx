@@ -55,27 +55,81 @@ const emptyForm = {
   addressParts: emptyAddressParts,
 };
 
-const getPatientAddressParts = (patient = {}) => {
-  if (patient.addressParts && Object.keys(patient.addressParts).length) {
-    return {
-      ...emptyAddressParts,
-      ...patient.addressParts,
-    };
-  }
+const firstText = (...values) =>
+  values
+    .map((value) => String(value ?? "").trim())
+    .find(Boolean) || "";
 
-  return {
-    streetVillage: String(patient.streetVillage || patient.Street || patient.street || "").trim(),
-    area: String(patient.area || patient.Area || patient.locality || patient.Locality || patient.town || patient.Town || "").trim(),
-    city: String(patient.city || patient.City || "").trim(),
-    state: String(patient.state || patient.State || "").trim(),
-    country: String(patient.country || patient.Country || INDIA_COUNTRY).trim() || INDIA_COUNTRY,
-    pincode: String(patient.pincode || patient.PostalCode || patient.postalCode || "").trim(),
+const getPatientAddressParts = (patient = {}) => {
+  const parsedAddress = parseAddress(firstText(patient.address, patient.Address));
+  const structuredParts =
+    patient.addressParts && Object.keys(patient.addressParts).length
+      ? patient.addressParts
+      : {};
+
+  const parts = {
+    ...emptyAddressParts,
+    ...parsedAddress,
+    ...structuredParts,
+    streetVillage: firstText(
+      structuredParts.streetVillage,
+      patient.streetVillage,
+      patient.StreetVillage,
+      patient.street,
+      patient.Street,
+      parsedAddress.streetVillage
+    ),
+    area: firstText(
+      structuredParts.area,
+      patient.area,
+      patient.Area,
+      patient.locality,
+      patient.Locality,
+      patient.town,
+      patient.Town,
+      parsedAddress.area
+    ),
+    city: firstText(
+      structuredParts.city,
+      patient.city,
+      patient.City,
+      patient.district,
+      patient.District,
+      parsedAddress.city
+    ),
+    state: firstText(
+      structuredParts.state,
+      patient.state,
+      patient.State,
+      parsedAddress.state
+    ),
+    country:
+      firstText(
+        structuredParts.country,
+        patient.country,
+        patient.Country,
+        parsedAddress.country
+      ) || INDIA_COUNTRY,
+    pincode: firstText(
+      structuredParts.pincode,
+      patient.pincode,
+      patient.Pincode,
+      patient.pinCode,
+      patient.PinCode,
+      patient.PostalCode,
+      patient.postalCode,
+      patient.zipCode,
+      patient.ZipCode,
+      parsedAddress.pincode
+    ),
   };
+
+  return parts;
 };
 
 const getPatientAddress = (patient = {}) => {
   const addressParts = getPatientAddressParts(patient);
-  return String(patient.address || "").trim() || buildAddress(addressParts);
+  return firstText(patient.address, patient.Address) || buildAddress(addressParts);
 };
 
 const bloodGroupOptions = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
