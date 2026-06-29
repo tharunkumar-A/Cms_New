@@ -49,6 +49,7 @@ function UserProfileMenu({ roleType = "admin" }) {
           <div className="user-profile-head">
             <strong>{profile.name}</strong>
             <span>{profile.email}</span>
+            <em>{profile.roleLabel}</em>
           </div>
           <button type="button" onClick={() => goTo(profile.profilePath)}>
             <span className="user-profile-menu-icon">

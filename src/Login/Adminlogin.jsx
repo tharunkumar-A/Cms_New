@@ -170,7 +170,7 @@ const getLoginIp = async (authData, claims) => {
 
   if (expectedIp) return expectedIp;
 
-  return fetchPublicIp();
+  return '';
 };
 
 const normalizeRole = (role) =>

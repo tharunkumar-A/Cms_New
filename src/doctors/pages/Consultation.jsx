@@ -25,6 +25,23 @@ const MEDICAL_HISTORY_API = apiUrl("MedicalHistory");
 const CONSULTATION_API = apiUrl("Consultation");
 
 const emptyValue = "-";
+const CLINICAL_NOTE_SECTIONS = [
+  { key: "noteSubjective", label: "Subjective" },
+  { key: "noteAssessment", label: "Assessment" },
+  { key: "notePlan", label: "Plan" },
+];
+
+const DEFAULT_DIAGNOSIS_OPTIONS = [
+  "Fever",
+  "Upper respiratory infection",
+  "Gastritis",
+  "Hypertension",
+  "Diabetes follow-up",
+  "Migraine",
+  "Allergic rhinitis",
+  "Back pain",
+  "Community Acquired Pneumonia",
+];
 
 const getInitials = (name) =>
   String(name || "P")
@@ -77,6 +94,41 @@ const normalizeOverview = (data) => ({
   bloodGroup: data?.bloodGroup || emptyValue,
 });
 
+const updateAppointmentStatusAPI = async (appointmentId, newStatus, headers = {}) => {
+  if (!appointmentId) return null;
+  
+  const defaultHeaders = {
+    "Content-Type": "application/json",
+    "ngrok-skip-browser-warning": "true",
+  };
+  const finalHeaders = { ...defaultHeaders, ...headers };
+
+  const routes = [
+    `${APPOINTMENTS_API}/${appointmentId}`,
+  ];
+
+  const payload = JSON.stringify({ status: newStatus });
+
+  for (const url of routes) {
+    try {
+      const response = await fetch(url, {
+        method: "PATCH",
+        headers: finalHeaders,
+        body: payload,
+      });
+      if (response.ok) {
+        const data = await response.json().catch(() => ({}));
+        return data || { status: newStatus };
+      }
+    } catch (err) {
+      console.warn(`Failed to update status at ${url}:`, err.message);
+    }
+  }
+  
+  console.warn(`Could not update appointment ${appointmentId} to status "${newStatus}"`);
+  return { status: newStatus };
+};
+
 const getStepFromStatus = (status) => {
   const cleanStatus = String(status || "").trim().toLowerCase();
 
@@ -92,6 +144,43 @@ const getFallbackAppointment = (appointments) =>
     )
   ) || appointments[0];
 
+const getClinicalSection = (text, heading, nextHeading) => {
+  const source = String(text || "");
+  const nextPattern = nextHeading ? `\\n\\s*${nextHeading}\\s*\\n` : "$";
+  const pattern = new RegExp(`${heading}\\s*\\n[-\\s]*\\n?([\\s\\S]*?)(?=${nextPattern})`, "i");
+  return (source.match(pattern)?.[1] || "").trim();
+};
+
+const parseClinicalNotes = (text) => {
+  const source = String(text || "").trim();
+  if (!source) {
+    return {
+      noteSubjective: "",
+      noteAssessment: "",
+      notePlan: "",
+    };
+  }
+
+  const noteSubjective = getClinicalSection(source, "Subjective", "Assessment");
+  const noteAssessment = getClinicalSection(source, "Assessment", "Plan");
+  const notePlan = getClinicalSection(source, "Plan");
+
+  if (noteSubjective || noteAssessment || notePlan) {
+    return { noteSubjective, noteAssessment, notePlan };
+  }
+
+  return {
+    noteSubjective: source,
+    noteAssessment: "",
+    notePlan: "",
+  };
+};
+
+const buildClinicalNotes = ({ noteSubjective, noteAssessment, notePlan }) =>
+  `Subjective\n${String(noteSubjective || "").trim()}\n\nAssessment\n${String(
+    noteAssessment || ""
+  ).trim()}\n\nPlan\n${String(notePlan || "").trim()}`.trim();
+
 function Consultation() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -105,6 +194,7 @@ function Consultation() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [diagnosisOptions, setDiagnosisOptions] = useState([]);
+  const [lastEdited, setLastEdited] = useState("");
   const [form, setForm] = useState({
     complaintsChoice: "",
     diagnosis: "",
@@ -114,7 +204,9 @@ function Consultation() {
     weight: "",
     pulse: "",
     resp: "",
-    notes: "",
+    noteSubjective: "",
+    noteAssessment: "",
+    notePlan: "",
   });
 
   useEffect(() => {
@@ -237,6 +329,8 @@ function Consultation() {
         setAppointment(hydratedAppointment);
         setOverview(patientOverview);
         setStep(getStepFromStatus(hydratedAppointment.status));
+        const clinicalSections = parseClinicalNotes(savedConsultation?.clinicalNotes);
+
         setForm({
           complaintsChoice: appointmentComplaint,
           diagnosis: savedConsultation?.diagnosis || "",
@@ -246,7 +340,7 @@ function Consultation() {
           weight: hydratedAppointment.weight || "",
           pulse: hydratedAppointment.pulseRate || "",
           resp: hydratedAppointment.respiratoryRate || "",
-          notes: savedConsultation?.clinicalNotes || "",
+          ...clinicalSections,
         });
       } catch (err) {
         console.error(err);
@@ -276,8 +370,26 @@ function Consultation() {
     };
   }, [appointment, overview]);
 
-  const handleChange = (e) =>
+  const diagnosisSelectOptions = useMemo(() => {
+    const options = new Set(DEFAULT_DIAGNOSIS_OPTIONS);
+    diagnosisOptions.forEach((diagnosis) => {
+      if (diagnosis) options.add(diagnosis);
+    });
+    if (form.diagnosis) options.add(form.diagnosis);
+    return Array.from(options).sort((a, b) => a.localeCompare(b));
+  }, [diagnosisOptions, form.diagnosis]);
+
+  const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    if (e.target.name.startsWith("note")) {
+      setLastEdited(
+        new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      );
+    }
+  };
 
   const saveConsultation = async () => {
     if (!appointment?.appointmentId || !appointment?.patientId) {
@@ -307,7 +419,7 @@ function Consultation() {
         patientId: Number(appointment.patientId),
         doctorId: appointment.doctorId || appointment.doctor?.id || undefined,
         diagnosis: form.diagnosis.trim(),
-        clinicalNotes: form.notes.trim(),
+        clinicalNotes: buildClinicalNotes(form),
       };
 
       if (form.complaintsChoice.trim()) {
@@ -326,15 +438,22 @@ function Consultation() {
         throw new Error(data.message || "Unable to save consultation.");
       }
 
+      const updatedStatus = "In Progress";
+      await updateAppointmentStatusAPI(appointment.appointmentId, updatedStatus, headers);
+
       setAppointment((prev) => ({
         ...prev,
-        status: data.status || "InProgress",
+        status: updatedStatus,
       }));
       setStep(1);
       setDiagnosisOptions((prev) =>
         mergeDiagnosisOption(prev, form.diagnosis)
       );
       setMessage(data.message || "Consultation saved.");
+
+      window.dispatchEvent(new CustomEvent("appointmentStatusUpdated", {
+        detail: { appointmentId: appointment.appointmentId, status: updatedStatus },
+      }));
 
       return data;
     } catch (err) {
@@ -359,7 +478,7 @@ function Consultation() {
         consultation: {
           ...result,
           diagnosis: result.diagnosis || form.diagnosis,
-          clinicalNotes: result.clinicalNotes || form.notes,
+          clinicalNotes: result.clinicalNotes || buildClinicalNotes(form),
         },
       },
     });
@@ -486,15 +605,31 @@ function Consultation() {
           </div>
 
           <div className="cn-field">
-            <label className="cn-label">Clinical Notes</label>
-            <textarea
-              className="cn-textarea"
-              name="notes"
-              value={form.notes}
-              onChange={handleChange}
-              rows={3}
-              placeholder="Enter clinical notes"
-            />
+            <div className="cn-notes-card">
+              <div className="cn-notes-header">
+                <label className="cn-label">Clinical Notes</label>
+                <span>Auto Saved</span>
+              </div>
+              <div className="cn-notes-sections">
+                {CLINICAL_NOTE_SECTIONS.map((section) => (
+                  <div className="cn-note-section" key={section.key}>
+                    <p className="cn-note-section-title">{section.label}</p>
+                    <textarea
+                      className="cn-textarea cn-notes-textarea"
+                      name={section.key}
+                      value={form[section.key]}
+                      onChange={handleChange}
+                      rows={4}
+                      placeholder={`Enter ${section.label.toLowerCase()} notes`}
+                    />
+                  </div>
+                ))}
+              </div>
+              <div className="cn-notes-footer">
+                <span>Character Count: {buildClinicalNotes(form).length}</span>
+                <span>Last Edited: {lastEdited || "-"}</span>
+              </div>
+            </div>
           </div>
 
           <div className="cn-field">
@@ -505,11 +640,11 @@ function Consultation() {
               list="consultation-diagnosis-options"
               value={form.diagnosis}
               onChange={handleChange}
-              placeholder="Enter diagnosis"
+              placeholder="Select or type diagnosis"
               autoComplete="off"
             />
             <datalist id="consultation-diagnosis-options">
-              {diagnosisOptions.map((diagnosis) => (
+              {diagnosisSelectOptions.map((diagnosis) => (
                 <option value={diagnosis} key={diagnosis} />
               ))}
             </datalist>

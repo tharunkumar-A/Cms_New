@@ -8,6 +8,21 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+html,
+body,
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
 :root {
   --app-bg: #f8fafc;
   --app-surface: #ffffff;
@@ -33,6 +48,42 @@ input,
 textarea,
 [contenteditable]:not([contenteditable="false"]) {
   caret-color: auto;
+}
+
+.is-invalid {
+  border-color: #dc2626 !important;
+}
+
+.is-invalid:focus {
+  border-color: #dc2626 !important;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12) !important;
+}
+
+[class*="field-error"],
+.rx-field-error,
+.doctor-settings-field-error,
+.sa-field-error {
+  display: block;
+  margin-top: 4px;
+  color: #dc2626 !important;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+[class*="inline-error"],
+[class*="form-error"],
+[class*="state-card--error"] {
+  border-color: #fecaca !important;
+  background: #fff7f7 !important;
+  color: #b91c1c !important;
+}
+
+[class*="inline-success"],
+[class*="form-success"] {
+  border-color: #bbf7d0 !important;
+  background: #f0fdf4 !important;
+  color: #15803d !important;
 }
 
 .content h1,

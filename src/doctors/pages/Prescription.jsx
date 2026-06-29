@@ -102,12 +102,6 @@ const toDateInput = (value) => {
   return date.toISOString().slice(0, 10);
 };
 
-const defaultFollowUpDate = () => {
-  const date = new Date();
-  date.setDate(date.getDate() + 7);
-  return date.toISOString().slice(0, 10);
-};
-
 const normalizeAppointment = (item, fallback = {}) => {
   if (!item) return null;
 
@@ -203,72 +197,49 @@ const getResponseMessage = (data, text, fallback) =>
   text ||
   fallback;
 
+const isAlreadyExistsMessage = (value) =>
+  /already\s+exi/i.test(String(value || ""));
+
 const toPositiveId = (value) => {
   const id = Number(value);
   return Number.isInteger(id) && id > 0 ? id : null;
 };
 
-const buildCompletedAppointmentBody = (appointment = {}, appointmentId) => ({
-  ...appointment,
-  id: appointment.id || appointmentId,
-  appointmentId,
-  status: "Completed",
-  Status: "Completed",
-});
+const updateAppointmentStatus = async (appointmentId, newStatus, headers = {}) => {
+  if (!appointmentId) return { status: newStatus };
 
-const updateAppointmentStatus = async ({ appointmentId, appointment, headers }) => {
-  const requests = [
-    {
-      url: `${APPOINTMENTS_API}/${appointmentId}/status`,
-      options: {
-        method: "PATCH",
-        headers,
-        body: JSON.stringify({ status: "Completed", Status: "Completed" }),
-      },
-    },
-    {
-      url: `${APPOINTMENTS_API}/${appointmentId}`,
-      options: {
-        method: "PATCH",
-        headers,
-        body: JSON.stringify({ status: "Completed", Status: "Completed" }),
-      },
-    },
-    {
-      url: `${APPOINTMENTS_API}/${appointmentId}`,
-      options: {
-        method: "PUT",
-        headers,
-        body: JSON.stringify(buildCompletedAppointmentBody(appointment, appointmentId)),
-      },
-    },
-  ];
+  const finalHeaders = {
+    "Content-Type": "application/json",
+    "ngrok-skip-browser-warning": "true",
+    ...headers,
+  };
 
-  let lastError = "Unable to update appointment status.";
+  const payload = JSON.stringify({ status: newStatus });
 
-  for (const request of requests) {
-    let response = null;
+  try {
+    const response = await fetch(`${APPOINTMENTS_API}/${appointmentId}`, {
+      method: "PATCH",
+      headers: finalHeaders,
+      body: payload,
+    });
 
-    try {
-      response = await fetch(request.url, request.options);
-    } catch (error) {
-      lastError = error.message || lastError;
-      continue;
+    if (response.ok) {
+      const data = await response.json().catch(() => ({}));
+      window.dispatchEvent(new CustomEvent("appointmentStatusUpdated", {
+        detail: { appointmentId, status: newStatus },
+      }));
+      return data || { status: newStatus };
     }
-
-    if (!response) continue;
 
     const responseText = await response.text().catch(() => "");
     const data = parseJsonText(responseText);
-
-    if (response.ok) {
-      return data;
-    }
-
-    lastError = getResponseMessage(data, responseText, lastError);
+    const message = getResponseMessage(data, responseText, "Failed to update status");
+    console.warn(`Status update failed: ${message}`);
+  } catch (error) {
+    console.warn(`Status update error: ${error.message}`);
   }
 
-  throw new Error(lastError);
+  return { status: newStatus };
 };
 
 function Prescription() {
@@ -283,7 +254,7 @@ function Prescription() {
   const [instructions, setInstructions] = useState(
     "Take medicines after food and complete the full course."
   );
-  const [followUp, setFollowUp] = useState(defaultFollowUpDate());
+  const [followUp, setFollowUp] = useState("");
   const [medicines, setMedicines] = useState([createMedicine()]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -367,7 +338,7 @@ function Prescription() {
             rawAppointments,
             getLoggedInDoctor()
           );
-          
+
           const appointments = rawAppointments.map((item) =>
             normalizeAppointment(item, {
               patientId: routeState.patientId || routeAppointment?.patientId,
@@ -444,9 +415,9 @@ function Prescription() {
         setConsultation(savedConsultation);
         const resolvedDiagnosis =
           savedPrescription?.diagnosis ||
-            savedConsultation?.diagnosis ||
-            routeState.consultation?.diagnosis ||
-            "";
+          savedConsultation?.diagnosis ||
+          routeState.consultation?.diagnosis ||
+          "";
 
         setDiagnosis(resolvedDiagnosis);
         setDiagnosisOptions((prev) =>
@@ -454,9 +425,9 @@ function Prescription() {
         );
         setInstructions(
           savedPrescription?.instructions ||
-            "Take medicines after food and complete the full course."
+          "Take medicines after food and complete the full course."
         );
-        setFollowUp(toDateInput(savedPrescription?.followUpDate) || defaultFollowUpDate());
+        setFollowUp(toDateInput(savedPrescription?.followUpDate));
 
         const existingMedicines = normalizeMedicines(savedPrescription?.medicines);
         setMedicines(existingMedicines.length ? existingMedicines : [createMedicine()]);
@@ -479,6 +450,22 @@ function Prescription() {
 
   const hospitalName = getClinicDisplayName({}, "Clinic Name");
   const doctorName = localStorage.getItem("doctorName") || appointment?.doctorName || "Doctor";
+  const chiefComplaint =
+    appointment?.chiefComplaints ||
+    appointment?.symptoms ||
+    consultation?.chiefComplaints ||
+    emptyValue;
+  const clinicalNote = consultation?.clinicalNotes || emptyValue;
+  const previewDiagnosis = diagnosis || consultation?.diagnosis || emptyValue;
+  const followUpLabel = followUp ? formatDateMMDDYYYY(followUp, emptyValue) : "Select date";
+  const vitals = [
+    ["BP", appointment?.bloodPressure],
+    ["Pulse", appointment?.pulseRate],
+    ["Temp", appointment?.temperature],
+    ["Weight", appointment?.weight],
+    ["Sugar", appointment?.sugarLevel],
+    ["Resp", appointment?.respiratoryRate],
+  ];
 
   const validMedicines = useMemo(
     () =>
@@ -671,6 +658,7 @@ function Prescription() {
             <td>${medicine.quantity || emptyValue}</td>
             <td>${medicine.frequency || emptyValue}</td>
             <td>${medicine.duration || emptyValue}</td>
+            <td>${medicine.notes || emptyValue}</td>
           </tr>`
       )
       .join("");
@@ -681,47 +669,69 @@ function Prescription() {
         <head>
           <title>Prescription - ${appointment?.patientName || "Patient"}</title>
           <style>
-            body { font-family: Arial, sans-serif; color: #0f172a; padding: 32px; }
-            .slip { max-width: 760px; margin: 0 auto; border: 1px solid #d9e1ec; border-radius: 10px; padding: 28px; }
-            .center { text-align: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 14px; }
-            h1 { margin: 0; font-size: 22px; }
-            .muted { color: #64748b; font-size: 13px; margin: 4px 0; }
-            .rx { font-size: 28px; font-weight: 800; font-style: italic; margin: 18px 0 10px; }
-            .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 14px 0; font-size: 13px; }
-            table { width: 100%; border-collapse: collapse; margin-top: 18px; }
+            body { font-family: Arial, sans-serif; color: #0f172a; padding: 28px; background: #f8fbff; }
+            .slip { max-width: 880px; margin: 0 auto; border: 1px solid #bfdbfe; border-radius: 14px; padding: 28px; background: #fff; box-shadow: inset 0 5px 0 #2563eb; }
+            .letterhead { text-align: center; border-bottom: 2px solid #2563eb; padding: 16px 12px 14px; margin: -8px -8px 18px; border-radius: 12px 12px 0 0; background: linear-gradient(135deg, #eff6ff 0%, #ecfeff 100%); }
+            h1 { margin: 0; font-size: 28px; letter-spacing: 0; color: #0f172a; }
+            .muted { color: #2563eb; font-size: 13px; font-weight: 700; margin: 4px 0; }
+            .summary { display: grid; grid-template-columns: 1fr 210px; gap: 20px; border-bottom: 1px solid #bfdbfe; padding-bottom: 16px; }
+            .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 18px; font-size: 13px; border: 1px solid #dbeafe; border-radius: 10px; padding: 12px; background: #f8fbff; }
+            .block { margin-top: 12px; font-size: 13px; }
+            .block b { display: block; margin-bottom: 4px; color: #1d4ed8; }
+            .block p { margin: 0; white-space: pre-wrap; color: #334155; }
+            .vitals { border: 1px solid #bfdbfe; border-radius: 10px; padding: 12px; font-size: 12px; background: linear-gradient(180deg, #eff6ff 0%, #ffffff 100%); }
+            .vitals b { display: block; margin-bottom: 6px; color: #1e40af; }
+            .vital-row { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px solid #dbeafe; padding: 6px 0; }
+            .vital-row:last-child { border-bottom: 0; }
+            .vital-row strong { text-align: right; }
+            .rx { font-size: 34px; font-weight: 900; font-style: italic; margin: 18px 0 8px; color: #1d4ed8; }
+            table { width: 100%; border-collapse: collapse; margin-top: 8px; }
             th, td { border-bottom: 1px solid #e2e8f0; padding: 10px; text-align: left; }
-            th { color: #475569; font-size: 12px; }
-            .footer { margin-top: 22px; display: flex; justify-content: space-between; gap: 24px; }
-            .signature { text-align: right; }
+            th { color: #1e40af; font-size: 12px; background: #eff6ff; }
+            .footer { margin-top: 22px; display: flex; justify-content: space-between; gap: 24px; border-top: 1px solid #bfdbfe; padding-top: 14px; color: #334155; }
+            .signature { text-align: right; min-height: 48px; padding-bottom: 6px; }
+            .signature p { margin: 3px 0; line-height: 1.45; }
           </style>
         </head>
         <body>
           <main class="slip">
-            <div class="center">
+            <div class="letterhead">
               <h1>${hospitalName}</h1>
-              <p class="muted">Patient prescription</p>
+              <p class="muted">Super Speciality Hospital</p>
               <p class="muted">Token: ${appointment?.tokenNumber || emptyValue}</p>
             </div>
-            <div class="rx">Rx</div>
-            <section class="grid">
-              <div><b>Patient:</b> ${appointment?.patientName || emptyValue}</div>
-              <div><b>PID:</b> ${appointment?.patientCode || emptyValue}</div>
-              <div><b>Age / Gender:</b> ${appointment?.age || emptyValue} Y / ${appointment?.gender || emptyValue}</div>
-              <div><b>Date:</b> ${formatDateMMDDYYYY(appointment?.date || new Date())}</div>
+            <section class="summary">
+              <div>
+                <section class="grid">
+                  <div><b>Patient:</b> ${appointment?.patientName || emptyValue}</div>
+                  <div><b>PID:</b> ${appointment?.patientCode || emptyValue}</div>
+                  <div><b>Age / Gender:</b> ${appointment?.age || emptyValue} Y / ${appointment?.gender || emptyValue}</div>
+                  <div><b>Date:</b> ${formatDateMMDDYYYY(appointment?.date || new Date())}</div>
+                </section>
+                <div class="block"><b>Chief Complaint</b><p>${chiefComplaint}</p></div>
+                <div class="block"><b>Clinical Note</b><p>${clinicalNote}</p></div>
+                <div class="block"><b>Diagnosis</b><p>${previewDiagnosis}</p></div>
+              </div>
+              <aside class="vitals">
+                <b>Vitals</b>
+                ${vitals
+        .map(([label, value]) => `<div class="vital-row"><span>${label}</span><strong>${value || emptyValue}</strong></div>`)
+        .join("")}
+              </aside>
             </section>
+            <div class="rx">Rx</div>
             <table>
-              <thead><tr><th>Medicine</th><th>Dosage</th><th>Qty</th><th>Frequency</th><th>Duration</th></tr></thead>
+              <thead><tr><th>Medicine</th><th>Dosage</th><th>Qty</th><th>Frequency</th><th>Duration</th><th>Notes</th></tr></thead>
               <tbody>${rows}</tbody>
             </table>
             <section class="footer">
               <div>
                 <p><b>Instructions:</b> ${instructions || "No instructions added."}</p>
-                <p><b>Follow-Up Date:</b> ${formatDateMMDDYYYY(followUp, emptyValue)}</p>
+                <p><b>Follow-Up Date:</b> ${followUpLabel}</p>
               </div>
               <div class="signature">
                 <p><b>Dr. ${doctorName}</b></p>
                 <p>${appointment?.doctorSpecialization || "Consultant"}</p>
-                <p>Diagnosis: ${diagnosis || consultation?.diagnosis || emptyValue}</p>
               </div>
             </section>
           </main>
@@ -744,6 +754,17 @@ function Prescription() {
 
   const downloadPrescription = () => {
     printPrescription();
+  };
+
+  const goToCompletion = (completedStatus = "Completed", completionMessage = "Prescription submitted.") => {
+    navigate("/doctor/completion", {
+      state: {
+        message: completionMessage,
+        appointmentStatus: completedStatus,
+        appointmentId: appointment.appointmentId,
+        patientName: appointment.patientName,
+      },
+    });
   };
 
   const submitPrescription = async () => {
@@ -829,36 +850,35 @@ function Prescription() {
       const data = parseJsonText(responseText);
 
       if (!response.ok) {
+        const message = getResponseMessage(
+          data,
+          responseText,
+          "Unable to submit prescription."
+        );
+
+        if (isAlreadyExistsMessage(message)) {
+          const statusResult = await updateAppointmentStatus(appointmentId, "Completed", headers);
+          const completedStatus = statusResult?.status || "Completed";
+
+          setAppointment((prev) => ({ ...prev, status: completedStatus }));
+          setError("");
+          setMessage("");
+          goToCompletion(completedStatus, "Prescription completed.");
+          return;
+        }
+
         throw new Error(
-          getResponseMessage(
-            data,
-            responseText,
-            "Unable to submit prescription."
-          )
+          message
         );
       }
 
-      const appointmentStatusResult = await updateAppointmentStatus({
-        appointmentId,
-        appointment,
-        headers,
-      });
-      const completedStatus =
-        appointmentStatusResult.appointmentStatus ||
-        appointmentStatusResult.status ||
-        "Completed";
+      const statusResult = await updateAppointmentStatus(appointmentId, "Completed", headers);
+      const completedStatus = statusResult?.status || "Completed";
       const text = data.message || "Prescription submitted.";
       setAppointment((prev) => ({ ...prev, status: completedStatus }));
       setMessage(text);
       toast.success(text);
-      navigate("/doctor/completion", {
-        state: {
-          message: data.message,
-          appointmentStatus: completedStatus,
-          appointmentId: appointment.appointmentId,
-          patientName: appointment.patientName,
-        },
-      });
+      goToCompletion(completedStatus, data.message || text);
     } catch (err) {
       console.error(err);
       const text = err.message || "Unable to submit prescription.";
@@ -890,9 +910,8 @@ function Prescription() {
           <React.Fragment key={label}>
             <div className="rx-step">
               <div
-                className={`rx-step-circle ${
-                  i < 2 ? "done" : i === 2 ? "active" : ""
-                }`}
+                className={`rx-step-circle ${i < 2 ? "done" : i === 2 ? "active" : ""
+                  }`}
               >
                 {i < 2 ? "✓" : i + 1}
               </div>
@@ -1006,20 +1025,15 @@ function Prescription() {
                   onBlur={(event) => registerTypedMedicine(event.target.value)}
                   placeholder="Select or type medicine"
                 />
-                <select
+                <input
                   className="rx-cell-input"
+                  list="prescription-dosage-options"
                   value={medicine.dosage}
                   onChange={(event) =>
                     updateMedicine(medicine.id, "dosage", event.target.value)
                   }
-                >
-                  <option value="">Dosage</option>
-                  {DOSAGE_OPTIONS.map((option) => (
-                    <option value={option} key={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
+                  placeholder="Select or type dosage"
+                />
                 <input
                   className="rx-cell-input"
                   type="number"
@@ -1082,6 +1096,12 @@ function Prescription() {
 
           <datalist id="prescription-medicine-options">
             {medicineSelectOptions.map((option) => (
+              <option value={option} key={option} />
+            ))}
+          </datalist>
+
+          <datalist id="prescription-dosage-options">
+            {DOSAGE_OPTIONS.map((option) => (
               <option value={option} key={option} />
             ))}
           </datalist>
@@ -1159,27 +1179,52 @@ function Prescription() {
               <p className="rx-slip-clinic">{hospitalName}</p>
               <p className="rx-slip-sub">Super Speciality Hospital</p>
               <p className="rx-slip-addr">
-                Patient prescription
-                <br />
                 Token: {appointment?.tokenNumber || emptyValue}
               </p>
             </div>
-            <div className="rx-slip-rx">Rx</div>
-            <div className="rx-slip-patient">
-              <p>
-                <b>Patient Name:</b> {appointment?.patientName || emptyValue}
-              </p>
-              <p>
-                <b>PID:</b> {appointment?.patientCode || emptyValue}
-              </p>
-              <p>
-                <b>Age / Gender:</b> {appointment?.age || emptyValue} Y /{" "}
-                {appointment?.gender || emptyValue}
-              </p>
-              <p>
-                <b>Date:</b> {formatDateMMDDYYYY(appointment?.date || new Date())}
-              </p>
+            <div className="rx-slip-summary">
+              <div className="rx-slip-main">
+                <div className="rx-slip-patient">
+                  <p>
+                    <b>Patient Name:</b> {appointment?.patientName || emptyValue}
+                  </p>
+                  <p>
+                    <b>PID:</b> {appointment?.patientCode || emptyValue}
+                  </p>
+                  <p>
+                    <b>Age / Gender:</b> {appointment?.age || emptyValue} Y /{" "}
+                    {appointment?.gender || emptyValue}
+                  </p>
+                  <p>
+                    <b>Date:</b> {formatDateMMDDYYYY(appointment?.date || new Date())}
+                  </p>
+                </div>
+                <div className="rx-slip-clinical">
+                  <p>
+                    <b>Chief Complaint</b>
+                    <span>{chiefComplaint}</span>
+                  </p>
+                  <p>
+                    <b>Clinical Note</b>
+                    <span>{clinicalNote}</span>
+                  </p>
+                  <p>
+                    <b>Diagnosis</b>
+                    <span>{previewDiagnosis}</span>
+                  </p>
+                </div>
+              </div>
+              <aside className="rx-slip-vitals">
+                <b>Vitals</b>
+                {vitals.map(([label, value]) => (
+                  <p key={label}>
+                    <span>{label}</span>
+                    <strong>{value || emptyValue}</strong>
+                  </p>
+                ))}
+              </aside>
             </div>
+            <div className="rx-slip-rx">Rx</div>
             <table className="rx-slip-table">
               <thead>
                 <tr>
@@ -1188,6 +1233,7 @@ function Prescription() {
                   <th>Qty</th>
                   <th>Frequency</th>
                   <th>Duration</th>
+                  <th>Notes</th>
                 </tr>
               </thead>
               <tbody>
@@ -1198,6 +1244,7 @@ function Prescription() {
                     <td>{medicine.quantity || emptyValue}</td>
                     <td>{medicine.frequency || emptyValue}</td>
                     <td>{medicine.duration || emptyValue}</td>
+                    <td>{medicine.notes || emptyValue}</td>
                   </tr>
                 ))}
               </tbody>
@@ -1206,16 +1253,13 @@ function Prescription() {
               <i>{instructions || "No instructions added."}</i>
             </p>
             <p className="rx-slip-followup">
-              Follow-Up Date: {formatDateMMDDYYYY(followUp, emptyValue)}
+              Follow-Up Date: {followUpLabel}
             </p>
             <div className="rx-slip-signature">
               <p>
                 <b>Dr. {doctorName}</b>
               </p>
               <p>{appointment?.doctorSpecialization || "Consultant"}</p>
-              <p>
-                Diagnosis: {diagnosis || consultation?.diagnosis || emptyValue}
-              </p>
             </div>
           </div>
         </div>

@@ -99,6 +99,9 @@ const getDateKey = (value) => {
   return `${year}-${month}-${day}`;
 };
 
+const pickFirst = (...values) =>
+  values.find((value) => String(value ?? "").trim()) || "";
+
 const normalizePatient = (data) => ({
   id: data?.id,
   patientCode: data?.patientCode || emptyValue,
@@ -110,8 +113,20 @@ const normalizePatient = (data) => ({
   gender: data?.gender || emptyValue,
   bloodGroup: data?.bloodGroup || emptyValue,
   dateOfBirth: formatDate(data?.dateOfBirth),
-  emergencyContactName: data?.emergencyContactName || "",
-  emergencyContactPhone: data?.emergencyContactPhone || "",
+  emergencyContactName: pickFirst(
+    data?.emergencyContactName,
+    data?.emergencyName,
+    data?.emergency_contact_name,
+    data?.guardianName,
+    data?.contactPersonName
+  ),
+  emergencyContactPhone: pickFirst(
+    data?.emergencyContactPhone,
+    data?.emergencyPhone,
+    data?.emergency_contact_phone,
+    data?.guardianPhone,
+    data?.contactPersonPhone
+  ),
   overallAppointments: data?.overallAppointments ?? 0,
   lastVisit: data?.lastVisit || emptyValue,
   allergies: data?.allergies || emptyValue,
@@ -384,6 +399,8 @@ function PatientDetails() {
         }
 
         const overviewPatient = normalizePatient({
+          ...(sourceAppointment?.patient || {}),
+          ...(sourceAppointment || {}),
           ...data,
           ...historyData,
         });

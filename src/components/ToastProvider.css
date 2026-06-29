@@ -27,6 +27,8 @@
 
 .app-toast-success {
   border-color: #bbf7d0;
+  background: #f0fdf4;
+  color: #15803d;
 }
 
 .app-toast-success svg:first-child {
@@ -35,6 +37,8 @@
 
 .app-toast-error {
   border-color: #fecaca;
+  background: #fff7f7;
+  color: #b91c1c;
 }
 
 .app-toast-error svg:first-child {

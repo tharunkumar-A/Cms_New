@@ -253,6 +253,71 @@
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
+.cn-notes-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.cn-notes-header,
+.cn-notes-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+}
+
+.cn-notes-header {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.cn-notes-header span {
+  color: #15803d;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.cn-notes-sections {
+  display: flex;
+  flex-direction: column;
+}
+
+.cn-note-section {
+  border-bottom: 1px solid #e2e8f0;
+  padding: 12px 14px 14px;
+}
+
+.cn-note-section:last-child {
+  border-bottom: 0;
+}
+
+.cn-note-section-title {
+  margin: 0 0 8px;
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.cn-notes-textarea {
+  min-height: 94px;
+  border-radius: 8px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.cn-notes-textarea:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.cn-notes-footer {
+  border-top: 1px solid #e2e8f0;
+  color: #64748b;
+  font-size: 12px;
+}
+
 /* ── Vitals 3-col grid ── */
 .cn-vitals-grid {
   display: grid;

@@ -56,6 +56,17 @@ function DoctorAppointments() {
   const [error, setError] = useState("");
   const [filter, setFilter] = useState("all");
 
+  const handleStatusUpdate = (event) => {
+    const { appointmentId, status } = event.detail;
+    setAppointments((prev) =>
+      prev.map((apt) =>
+        String(apt.id || apt.appointmentId) === String(appointmentId)
+          ? { ...apt, status }
+          : apt
+      )
+    );
+  };
+
   const fetchAppointments = async ({ silent = false } = {}) => {
     try {
       if (silent) setRefreshing(true);
@@ -72,7 +83,7 @@ function DoctorAppointments() {
       const data = await response.json();
       let appts = Array.isArray(data) ? data : [];
       appts = filterByLoggedInDoctor(appts, getLoggedInDoctor());
-      
+
       appts.sort((a, b) => new Date(b.date) - new Date(a.date));
       setAppointments(appts);
     } catch (err) {
@@ -86,6 +97,13 @@ function DoctorAppointments() {
 
   useEffect(() => {
     fetchAppointments();
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener("appointmentStatusUpdated", handleStatusUpdate);
+    return () => {
+      window.removeEventListener("appointmentStatusUpdated", handleStatusUpdate);
+    };
   }, []);
 
   const normalizedAppointments = useMemo(() => normalizeQueue(appointments), [appointments]);
@@ -183,7 +201,7 @@ function DoctorAppointments() {
                   </span>
                 </span>
                 <span className="da-actions">
-                    <button
+                  <button
                     className="da-act-btn"
                     type="button"
                     title="View patient details"
