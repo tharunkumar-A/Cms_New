@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Eye, Pencil, Plus, Trash2 } from "lucide-react";
+import { Eye, Pencil, Plus, Trash2, ToggleLeft, ToggleRight } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import Header from "../../../components/superadmin/Header";
 import DataTable from "../../../components/superadmin/DataTable";
 import SearchFilter from "../../../components/superadmin/SearchFilter";
-import { deleteClinic, fetchClinics } from "../superAdminApi";
+import { deleteClinic, fetchClinics, updateClinicStatus } from "../superAdminApi";
 
 function Clinics() {
   const navigate = useNavigate();
@@ -14,6 +14,7 @@ function Clinics() {
   const [clinics, setClinics] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [updatingClinicId, setUpdatingClinicId] = useState(null);
 
   const loadClinics = async () => {
     setLoading(true);
@@ -31,6 +32,27 @@ function Clinics() {
   useEffect(() => {
     loadClinics();
   }, []);
+
+  const toggleClinicStatus = async (clinic) => {
+    const nextStatus = clinic.status === "Active" ? "Inactive" : "Active";
+    setUpdatingClinicId(clinic.id);
+    setError("");
+
+    try {
+      await updateClinicStatus(clinic.id, nextStatus);
+      setClinics((previous) =>
+        previous.map((item) =>
+          String(item.id) === String(clinic.id)
+            ? { ...item, status: nextStatus }
+            : item
+        )
+      );
+    } catch (requestError) {
+      setError(requestError.message || "Unable to update clinic status.");
+    } finally {
+      setUpdatingClinicId(null);
+    }
+  };
 
   const handleDelete = async (clinic) => {
     const confirmed = window.confirm(`Delete ${clinic.name || "this clinic"}?`);
@@ -81,6 +103,14 @@ function Clinics() {
           </button>
           <button className="sa-icon-btn" onClick={() => navigate(`/superadmin/clinics/edit/${clinic.id}`)} title="Edit clinic">
             <Pencil size={15} />
+          </button>
+          <button
+            className="sa-icon-btn"
+            onClick={() => toggleClinicStatus(clinic)}
+            disabled={updatingClinicId === clinic.id}
+            title={clinic.status === "Active" ? "Deactivate clinic" : "Activate clinic"}
+          >
+            {clinic.status === "Active" ? <ToggleRight size={15} /> : <ToggleLeft size={15} />}
           </button>
           <button className="sa-icon-btn" onClick={() => handleDelete(clinic)} title="Delete clinic">
             <Trash2 size={15} />
