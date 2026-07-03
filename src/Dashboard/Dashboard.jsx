@@ -23,7 +23,7 @@ import {
   Stethoscope,
   Users,
   Calendar,
-  DollarSign,
+  IndianRupee,
   CalendarCheck,
   DollarSign,
   UserPlus,
@@ -427,23 +427,9 @@ function Dashboard() {
   };
 
   const summaryCards = [
-    // {
-    //   label:
-    //     "Total Doctors Count",
-    //   value:
-    //     formatNumber(
-    //       dashboardData?.totalDoctorsCount ??
-    //       dashboardData?.doctorCount ??
-    //       dashboardData?.totalDoctors
-    //     ),
-    //   icon:
-    //     Stethoscope,
-    //   color:
-    //     "",
-    // },
     {
       label:
-        " Today's Appointments",
+        "Today's Appointments",
       value:
         formatNumber(
           dashboardData?.todayAppointments
@@ -471,7 +457,7 @@ function Dashboard() {
     },
     {
       label:
-        "Total Doctors ",
+        "Total Doctors",
       value:
         formatNumber(
           dashboardData?.totalDoctors
@@ -500,25 +486,13 @@ function Dashboard() {
     },
     {
       label:
-        "Total patients",
+        "Total Patients",
       value:
         formatNumber(
           dashboardData?.totalPatients
         ),
       icon:
-        Clock,
-      color:
-        "amber",
-    },
-    {
-      label:
-        "Total Revenue",
-      value:
-        formatCurrency(
-          totalRevenue
-        ),
-      icon:
-        DollarSign,
+        UserRoundCheck,
       color:
         "orange",
       route:
