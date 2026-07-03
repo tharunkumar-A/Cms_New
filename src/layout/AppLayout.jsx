@@ -12,7 +12,8 @@ const useAuth = () => {
     localStorage.getItem("token") ||
     localStorage.getItem("adminToken") ||
     localStorage.getItem("doctorToken") ||
-    localStorage.getItem("receptionistToken");
+    localStorage.getItem("receptionistToken") ||
+    localStorage.getItem("patientToken");
 
   const role =
     localStorage.getItem("adminRole") ||
@@ -24,10 +25,11 @@ const useAuth = () => {
 
   const isDoctor = normalizedRole === "doctor" || Boolean(localStorage.getItem("doctorToken"));
   const isReceptionist = normalizedRole === "receptionist" || Boolean(localStorage.getItem("receptionistToken"));
+  const isPatient = normalizedRole === "patient" || Boolean(localStorage.getItem("patientToken"));
   const isSuperAdmin = normalizedRole === "superadmin";
 
   return {
-    user: token ? { name: "Admin", isDoctor, isReceptionist, isSuperAdmin } : null,
+    user: token ? { name: "Admin", isDoctor, isReceptionist, isPatient, isSuperAdmin } : null,
   };
 };
 
@@ -39,6 +41,7 @@ function AppLayout() {
   if (!user) return <Navigate to="/login" replace />;
   if (user.isDoctor) return <Navigate to="/doctor/dashboard" replace />;
   if (user.isReceptionist) return <Navigate to="/reception/dashboard" replace />;
+  if (user.isPatient) return <Navigate to="/patient/dashboard" replace />;
 
   if (location.pathname.startsWith("/superadmin") && !user.isSuperAdmin) {
     return <Navigate to="/dashboard" replace />;

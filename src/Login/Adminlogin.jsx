@@ -545,9 +545,11 @@ const AdminLogin = () => {
           </button>
         </form>
 
-        <Link to="/forgot-password" className="forgot-password-link">
-          Forgot Password?
-        </Link>
+        <div className="auth-actions-row">
+          <Link to="/forgot-password" className="forgot-password-link">
+            Forgot Password?
+          </Link>
+        </div>
 
         <div className="auth-footer">
           © {new Date().getFullYear()} CMS · Secure Access

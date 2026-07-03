@@ -1,0 +1,627 @@
+/* ==================== Patient Dashboard ==================== */
+
+.patient-dashboard {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 30px 20px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+}
+
+/* ==================== Loading & Error States ==================== */
+
+.patient-dashboard-loading,
+.patient-dashboard-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-size: 18px;
+  color: #666;
+}
+
+/* ==================== Header Section ==================== */
+
+.pd-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+  padding: 0 10px;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.pd-greeting {
+  flex: 1;
+  min-width: 300px;
+}
+
+.pd-greeting-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1a202c;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.5px;
+}
+
+.pd-greeting-subtitle {
+  font-size: 16px;
+  color: #718096;
+  margin: 0;
+  font-weight: 400;
+}
+
+.pd-book-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #0ea5a5 0%, #0d9488 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(14, 165, 165, 0.3);
+}
+
+.pd-book-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(14, 165, 165, 0.4);
+}
+
+.pd-book-btn:active {
+  transform: translateY(0);
+}
+
+/* ==================== Stats Container ==================== */
+
+.pd-stats-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.pd-stat-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  border-left: 4px solid #0ea5a5;
+}
+
+.pd-stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+.pd-stat-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.pd-stat-icon {
+  color: #0ea5a5;
+  flex-shrink: 0;
+}
+
+.pd-stat-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #718096;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pd-stat-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.pd-appointment-date {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1a202c;
+  margin: 0 0 4px 0;
+}
+
+.pd-appointment-time {
+  font-size: 14px;
+  color: #718096;
+  margin: 0;
+}
+
+.pd-stat-number {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1a202c;
+  margin: 0 0 4px 0;
+}
+
+.pd-stat-description {
+  font-size: 13px;
+  color: #718096;
+  margin: 0;
+}
+
+/* Stat card color variations */
+.pd-stat-appointment {
+  border-left-color: #0ea5a5;
+}
+
+.pd-stat-visits {
+  border-left-color: #3b82f6;
+}
+
+.pd-stat-visits .pd-stat-icon {
+  color: #3b82f6;
+}
+
+.pd-stat-prescriptions {
+  border-left-color: #f59e0b;
+}
+
+.pd-stat-prescriptions .pd-stat-icon {
+  color: #f59e0b;
+}
+
+.pd-stat-bills {
+  border-left-color: #10b981;
+}
+
+.pd-stat-bills .pd-stat-icon {
+  color: #10b981;
+}
+
+/* ==================== Main Content ==================== */
+
+.pd-main-content {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 30px;
+  margin-bottom: 40px;
+}
+
+.pd-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.pd-section-header h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a202c;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pd-view-all {
+  font-size: 14px;
+  color: #0ea5a5;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.pd-view-all:hover {
+  color: #0d9488;
+  text-decoration: underline;
+}
+
+/* ==================== Appointment Section ==================== */
+
+.pd-appointment-section {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.pd-appointment-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pd-doctor-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.pd-doctor-avatar {
+  font-size: 48px;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f0f9ff;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.pd-doctor-details {
+  flex: 1;
+}
+
+.pd-doctor-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a202c;
+  margin: 0 0 4px 0;
+}
+
+.pd-doctor-specialty {
+  font-size: 14px;
+  color: #718096;
+  margin: 0 0 4px 0;
+}
+
+.pd-doctor-clinic {
+  font-size: 13px;
+  color: #cbd5e0;
+  margin: 0;
+}
+
+.pd-appointment-status {
+  text-align: right;
+}
+
+.pd-status-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  background: #d1fae5;
+  color: #065f46;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.pd-appointment-datetime {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  color: #718096;
+  font-size: 14px;
+}
+
+.pd-appointment-actions {
+  display: flex;
+  gap: 12px;
+  padding-top: 8px;
+}
+
+.pd-action-btn {
+  flex: 1;
+  padding: 10px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: white;
+  color: #1a202c;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pd-action-details {
+  color: #0ea5a5;
+  border-color: #0ea5a5;
+}
+
+.pd-action-details:hover {
+  background: rgba(14, 165, 165, 0.05);
+}
+
+.pd-action-reschedule {
+  border-color: #cbd5e0;
+  color: #718096;
+}
+
+.pd-action-reschedule:hover {
+  background: #f7fafc;
+}
+
+/* ==================== Notifications Section ==================== */
+
+.pd-notifications-section {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  height: fit-content;
+  position: sticky;
+  top: 30px;
+}
+
+.pd-notifications-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex: 1;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.pd-notification-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #f7fafc;
+  border-left: 3px solid transparent;
+}
+
+.pd-notification-item:hover {
+  background: #edf2f7;
+}
+
+.pd-notification-item.unread {
+  background: #eff6ff;
+  border-left-color: #3b82f6;
+}
+
+.pd-notification-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #3b82f6;
+  flex-shrink: 0;
+  margin-top: 4px;
+  display: none;
+}
+
+.pd-notification-item.unread .pd-notification-indicator {
+  display: block;
+}
+
+.pd-notification-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.pd-notification-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a202c;
+  margin: 0 0 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pd-notification-message {
+  font-size: 12px;
+  color: #718096;
+  margin: 0 0 4px 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.pd-notification-time {
+  font-size: 11px;
+  color: #a0aec0;
+}
+
+.pd-notification-icon {
+  color: #cbd5e0;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.pd-view-all-notifications {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  color: #0ea5a5;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pd-view-all-notifications:hover {
+  background: rgba(14, 165, 165, 0.05);
+  border-color: #0ea5a5;
+}
+
+/* ==================== Action Buttons Section ==================== */
+
+.pd-action-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+}
+
+.pd-action-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a202c;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.pd-action-card:hover {
+  border-color: #0ea5a5;
+  color: #0ea5a5;
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+.pd-action-card svg {
+  width: 28px;
+  height: 28px;
+  color: inherit;
+  transition: transform 0.2s ease;
+}
+
+.pd-action-card:hover svg {
+  transform: scale(1.1);
+}
+
+/* ==================== Responsive Design ==================== */
+
+@media (max-width: 1024px) {
+  .pd-main-content {
+    grid-template-columns: 1fr;
+  }
+
+  .pd-notifications-section {
+    position: static;
+    top: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .patient-dashboard {
+    padding: 20px 12px;
+  }
+
+  .pd-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .pd-greeting-title {
+    font-size: 24px;
+  }
+
+  .pd-stats-container {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+  }
+
+  .pd-stat-card {
+    padding: 16px;
+  }
+
+  .pd-stat-label {
+    font-size: 11px;
+  }
+
+  .pd-appointment-date {
+    font-size: 18px;
+  }
+
+  .pd-stat-number {
+    font-size: 24px;
+  }
+
+  .pd-action-buttons {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .pd-doctor-info {
+    flex-direction: column;
+  }
+
+  .pd-appointment-status {
+    text-align: left;
+  }
+
+  .pd-action-btn {
+    font-size: 13px;
+    padding: 8px 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .patient-dashboard {
+    padding: 16px 8px;
+  }
+
+  .pd-greeting-title {
+    font-size: 20px;
+  }
+
+  .pd-greeting-subtitle {
+    font-size: 14px;
+  }
+
+  .pd-book-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .pd-stats-container {
+    grid-template-columns: 1fr;
+  }
+
+  .pd-appointment-section,
+  .pd-notifications-section {
+    padding: 16px;
+  }
+
+  .pd-action-buttons {
+    grid-template-columns: 1fr;
+  }
+
+  .pd-action-card {
+    flex-direction: row;
+    justify-content: flex-start;
+  }
+
+  .pd-action-card svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .pd-section-header h2 {
+    font-size: 16px;
+  }
+}
+
+/* ==================== Scrollbar Styling ==================== */
+
+.pd-notifications-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.pd-notifications-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.pd-notifications-list::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 2px;
+}
+
+.pd-notifications-list::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
