@@ -926,10 +926,10 @@ function Prescription() {
         ))}
       </div>
 
-      <div className="rx-clinic-banner">
+      {/* <div className="rx-clinic-banner">
         <span>Clinic Name</span>
         <strong>{hospitalName}</strong>
-      </div>
+      </div> */}
 
       {error ? <div className="rx-inline-error">{error}</div> : null}
       {message ? <div className="rx-inline-success">{message}</div> : null}

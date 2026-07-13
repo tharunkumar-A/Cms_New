@@ -236,6 +236,9 @@ import {
   canUsePermission,
   fetchAndStoreRolePermissions,
 } from "../../utils/authorization";
+import {
+  validateUniqueMobileNumber,
+} from "../../utils/mobileUniqueness";
 const DOCTORS_API_URL =
   apiUrl("Doctor");
 
@@ -629,6 +632,20 @@ function AddDoctor() {
     if (!validateForm(formattedForm)) {
       setError("Please fix the highlighted fields.");
       toast.error("Please fix the highlighted fields.");
+      return;
+    }
+
+    const duplicateMobileMessage = await validateUniqueMobileNumber(
+      formattedForm.phone
+    );
+
+    if (duplicateMobileMessage) {
+      setFieldErrors((previous) => ({
+        ...previous,
+        phone: duplicateMobileMessage,
+      }));
+      setError(duplicateMobileMessage);
+      toast.error(duplicateMobileMessage);
       return;
     }
 
